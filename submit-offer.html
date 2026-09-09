@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>تقديم عرض | Submit Offer</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['investor'])) {}
+else {
+const l = State.lang;
+const params = new URLSearchParams(location.search);
+const assetId = params.get('asset') || 'a1';
+const asset = DB.assets.find(a=>a.id===assetId);
+const assetName = asset ? (l==='ar'?asset.nameAr:asset.nameEn) : '—';
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('investor','ai-matches.html')}
+    <main class="main-content">
+      <div style="max-width:42rem">
+        <div class="mb-5">
+          <a href="ai-matches.html" class="text-sm text-gray-500 flex items-center gap-1 mb-3">${svgIcon('arrow-left',14)} ${t('common.back')}</a>
+          <h1 class="text-xl font-bold text-gray-900">${t('offer.submitTitle')}</h1>
+          <p class="text-sm text-gray-500 mt-1">${l==='ar'?`الأصل: ${assetName}`:`Asset: ${assetName}`}</p>
+        </div>
+        <div id="offer-success" class="hidden text-center py-10">
+          <div style="color:var(--emerald-500);margin-bottom:1rem">${svgIcon('check-circle',48)}</div>
+          <h2 class="text-xl font-bold text-gray-900 mb-2">${l==='ar'?'تم تقديم العرض بنجاح':'Offer Submitted Successfully'}</h2>
+          <p class="text-sm text-gray-500 mb-5">${l==='ar'?'سيراجع صاحب الأصل عرضك ويتواصل معك.':'The asset owner will review your offer.'}</p>
+          <a href="investor-dashboard.html" class="btn btn-primary">${t('nav.dashboard')}</a>
+        </div>
+        <form id="offer-form" class="card space-y-5">
+          <div>
+            <label class="form-label">${t('offer.projectDescLabel')} *</label>
+            <textarea id="f-desc" class="form-textarea" rows="4" required placeholder="${l==='ar'?'صف مشروعك وخطة التشغيل...':'Describe your project and operations plan...'}"></textarea>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label class="form-label">${t('offer.periodLabel')}</label>
+              <input id="f-period" type="number" class="form-input" dir="ltr" placeholder="2" min="1">
+            </div>
+            <div>
+              <label class="form-label">${l==='ar'?'الوحدة':'Unit'}</label>
+              <select id="f-period-unit" class="form-select">
+                <option value="years">${t('common.years')}</option>
+                <option value="months">${t('common.months')}</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">${t('offer.financialLabel')}</label>
+            <div class="flex gap-3 mb-3">
+              <button type="button" class="toggle-btn flex-1 active" id="btn-share" onclick="pickFinancial('share')">${t('offer.revenueShare')}</button>
+              <button type="button" class="toggle-btn flex-1" id="btn-fixed" onclick="pickFinancial('fixed')">${t('offer.fixedRent')}</button>
+            </div>
+            <div id="fin-share">
+              <label class="form-label">${t('offer.percentageLabel')}</label>
+              <input id="f-percent" type="number" class="form-input" dir="ltr" placeholder="30" min="1" max="100">
+            </div>
+            <div id="fin-fixed" style="display:none">
+              <label class="form-label">${t('offer.amountLabel')}</label>
+              <input id="f-amount" type="number" class="form-input" dir="ltr" placeholder="80000">
+            </div>
+          </div>
+          <div>
+            <label class="form-label">${t('offer.meetRequirementsLabel')}</label>
+            <textarea id="f-meet" class="form-textarea" rows="3"></textarea>
+          </div>
+          <div id="submit-err" style="display:none;padding:.6rem 1rem;background:var(--red-50);border:1px solid var(--red-200);border-radius:.5rem;font-size:.875rem;color:var(--red-600)"></div>
+          <button type="button" id="submit-btn" class="btn btn-primary w-full justify-center" onclick="submitOffer()">${t('offer.reviewSubmit')}</button>
+        </form>
+      </div>
+    </main>
+  </div>
+</div>`;
+
+function submitOffer() {
+  const desc = document.getElementById('f-desc').value.trim();
+  const errEl = document.getElementById('submit-err');
+  if(!desc) {
+    errEl.textContent = l==='ar' ? 'يرجى كتابة وصف المشروع وخطة التشغيل' : 'Please describe your project and operations plan';
+    errEl.style.display = 'block';
+    document.getElementById('f-desc').focus();
+    return;
+  }
+  errEl.style.display = 'none';
+  document.getElementById('offer-form').style.display = 'none';
+  document.getElementById('offer-success').classList.remove('hidden');
+}
+
+function pickFinancial(type) {
+  document.getElementById('fin-share').style.display = type==='share' ? '' : 'none';
+  document.getElementById('fin-fixed').style.display = type==='fixed' ? '' : 'none';
+  document.getElementById('btn-share').classList.toggle('active', type==='share');
+  document.getElementById('btn-fixed').classList.toggle('active', type==='fixed');
+}
+}
+</script>
+</body>
+</html>

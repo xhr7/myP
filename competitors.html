@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>الحلول الحالية | Competitors</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+const l = State.lang;
+const ownerJ = l==='ar'
+  ? ['يتصل بالوسطاء','يعلن في منصات عقارية','يتلقى مكالمات غير مؤهلة','يفاوض وحده','يوثّق الاتفاقية بجهوده','يتابع الدفعات يدوياً']
+  : ['Contacts brokers','Lists on real estate platforms','Receives unqualified calls','Negotiates alone','Documents agreement manually','Tracks payments manually'];
+const investorJ = l==='ar'
+  ? ['يبحث في منصات متعددة','يزور مواقع متعددة','يتفاوض دون معلومات كافية','يوثّق الاتفاقية بجهوده','لا يوجد سير عمل موحّد']
+  : ['Searches across multiple platforms','Visits multiple sites','Negotiates without enough data','Documents agreement manually','No unified workflow'];
+const aayedJ = l==='ar'
+  ? ['تسجيل واحد','بيانات الأصل منظّمة','مطابقة ذكية بالذكاء الاصطناعي','عروض منظّمة','اتفاقية شفافة مع عمولة 2.5٪','تتبع العوائد والمدفوعات']
+  : ['Single registration','Structured asset data','AI-powered intelligent matching','Structured offers','Transparent agreement with 2.5% commission','Returns & payments tracking'];
+
+function journeyList(items, color) {
+  const cls = {orange:'var(--orange-50)',blue:'var(--blue-50)',emerald:'var(--emerald-50)'};
+  const tcls = {orange:'var(--orange-700)',blue:'var(--blue-700)',emerald:'var(--emerald-700)'};
+  return items.map((it,i)=>`
+    <li style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;padding:.5rem .75rem;background:${cls[color]};border-radius:.5rem;color:${tcls[color]}">
+      <span style="font-weight:700;font-size:.75rem;width:1.25rem;height:1.25rem;background:rgba(255,255,255,.6);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</span>
+      ${it}
+    </li>`).join('');
+}
+
+/* Comparison table */
+const features = [
+  {key:'focusRetired', label: l==='ar'?'تركيز على المتقاعدين':'Focus on Retired Owners'},
+  {key:'noSale', label: l==='ar'?'لا بيع للأصل':'No Asset Sale'},
+  {key:'ownerRetention', label: l==='ar'?'احتفاظ بالملكية':'Full Ownership Retention'},
+  {key:'investorModel', label: l==='ar'?'نموذج المالك/المشغّل':'Owner/Operator Model'},
+  {key:'aiMatching', label: l==='ar'?'مطابقة بالذكاء الاصطناعي':'AI-Powered Matching'},
+  {key:'matchExplanation', label: l==='ar'?'تفسير التطابق':'Match Explanation'},
+  {key:'offerWorkflow', label: l==='ar'?'سير عمل العروض':'Offer Workflow'},
+  {key:'agreementWorkflow', label: l==='ar'?'سير عمل الاتفاقية':'Agreement Workflow'},
+  {key:'returnTracking', label: l==='ar'?'تتبع العوائد':'Return Tracking'},
+  {key:'arabicUX', label: l==='ar'?'واجهة عربية للمتقاعدين':'Arabic UX for Retirees'},
+];
+
+function renderVal(v) {
+  if (v===true) return `<span class="check-yes">${svgIcon('check-circle',16)}</span>`;
+  if (v===false) return `<span class="check-no" style="color:var(--gray-300)">${svgIcon('x',16)}</span>`;
+  if (v==='partial') return `<span class="check-partial" style="font-size:.75rem;font-weight:600">~</span>`;
+  return '—';
+}
+
+const tableHtml = `
+<div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th style="width:11rem">${l==='ar'?'الميزة':'Feature'}</th>
+      ${DB.competitors.map(c=>`<th style="text-align:center;${c.highlight?'color:var(--emerald-700);background:var(--emerald-50)':''}" >${c.name}</th>`).join('')}
+    </tr></thead>
+    <tbody>
+      <tr style="background:var(--gray-50)">
+        <td style="font-size:.75rem;color:var(--gray-500)">${l==='ar'?'التركيز':'Focus'}</td>
+        ${DB.competitors.map(c=>`<td style="text-align:center;font-size:.75rem;${c.highlight?'background:rgba(16,185,129,.05);color:var(--emerald-700);font-weight:600':''}">${l==='ar'?c.focusAr:c.focusEn}</td>`).join('')}
+      </tr>
+      ${features.map(f=>`<tr>
+        <td>${f.label}</td>
+        ${DB.competitors.map(c=>`<td style="text-align:center;${c.highlight?'background:rgba(16,185,129,.03)':''}">${renderVal(c[f.key])}</td>`).join('')}
+      </tr>`).join('')}
+    </tbody>
+  </table>
+</div>`;
+
+document.getElementById('root').innerHTML = `
+${buildNavbar({ publicLinks: true })}
+<main style="flex:1;padding:3rem 1.25rem">
+  <div class="container">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-extrabold text-gray-900 mb-2">${t('competitors.title')}</h1>
+      <p class="text-gray-500 text-sm">${t('competitors.subtitle')}</p>
+    </div>
+
+    <h2 class="font-bold text-gray-900 mb-5 text-lg">${t('competitors.currentJourneyTitle')}</h2>
+    <div class="grid-2 mb-8">
+      <div>
+        <div class="text-sm font-semibold mb-3" style="color:var(--orange-700)">${t('competitors.ownerJourney')}</div>
+        <ul class="space-y-2">${journeyList(ownerJ,'orange')}</ul>
+      </div>
+      <div>
+        <div class="text-sm font-semibold mb-3" style="color:var(--blue-700)">${t('competitors.investorJourney')}</div>
+        <ul class="space-y-2">${journeyList(investorJ,'blue')}</ul>
+      </div>
+    </div>
+
+    <div class="mb-10">
+      <div class="text-sm font-semibold mb-3" style="color:var(--emerald-700)">${t('competitors.aayedJourney')}</div>
+      <ul class="space-y-2">${journeyList(aayedJ,'emerald')}</ul>
+    </div>
+
+    <h2 class="font-bold text-gray-900 mb-4 text-lg">${t('competitors.comparisonTitle')}</h2>
+    ${tableHtml}
+
+    <div class="alert alert-emerald mt-8">
+      ${svgIcon('check-circle',20)}
+      <div>
+        <div class="font-semibold mb-1">${t('competitors.differentiationTitle')}</div>
+        <p class="text-sm leading-relaxed">${t('competitors.differentiationDesc')}</p>
+      </div>
+    </div>
+  </div>
+</main>
+${buildFooter()}`;
+</script>
+</body>
+</html>

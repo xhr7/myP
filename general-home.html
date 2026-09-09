@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>عائد | General Home</title><link rel="stylesheet" href="style.css"></head>
+<body style="background:var(--gray-50)">
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if (!requireAuth(['general','owner','investor'])) { /* redirected */ }
+else {
+  const u = State.user;
+  const nm = State.lang==='ar' ? u.nameAr : u.nameEn;
+  document.getElementById('root').innerHTML = `
+  ${buildNavbar()}
+  <main style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 1rem">
+    <div class="text-center mb-10">
+      <h1 class="text-3xl font-extrabold text-gray-900 mb-2">${State.lang==='ar'?`أهلاً، ${nm}`:`Welcome, ${nm}`}</h1>
+      <p class="text-gray-500">${t('general.welcomeDesc')}</p>
+    </div>
+    <div class="grid-2" style="max-width:40rem;width:100%">
+      <div class="card card-hover" style="padding:1.75rem;border-radius:1rem;cursor:pointer" onclick="startOwner()">
+        <div style="width:3rem;height:3rem;background:var(--emerald-100);border-radius:.75rem;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;color:var(--emerald-600)">${svgIcon('building',24)}</div>
+        <h2 class="font-bold text-gray-900 text-lg mb-2">${t('general.ownerCardTitle')}</h2>
+        <p class="text-sm text-gray-600 leading-relaxed mb-5">${t('general.ownerCardDesc')}</p>
+        <div class="btn btn-primary w-full justify-center">${t('general.ownerCardCta')} ${svgIcon('arrow-right',16)}</div>
+      </div>
+      <div class="card card-hover" style="padding:1.75rem;border-radius:1rem;cursor:pointer" onclick="startInvestor()">
+        <div style="width:3rem;height:3rem;background:var(--blue-100);border-radius:.75rem;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;color:var(--blue-600)">${svgIcon('trending-up',24)}</div>
+        <h2 class="font-bold text-gray-900 text-lg mb-2">${t('general.investorCardTitle')}</h2>
+        <p class="text-sm text-gray-600 leading-relaxed mb-5">${t('general.investorCardDesc')}</p>
+        <div class="btn btn-blue w-full justify-center">${t('general.investorCardCta')} ${svgIcon('arrow-right',16)}</div>
+      </div>
+    </div>
+  </main>`;
+}
+function startOwner()   { location.href = 'owner-onboarding.html'; }
+function startInvestor(){ location.href = 'investor-onboarding.html'; }
+</script>
+</body>
+</html>

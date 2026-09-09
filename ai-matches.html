@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>نتائج الذكاء الاصطناعي | AI Matches</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['investor'])) {}
+else {
+const l = State.lang;
+// Mock AI matches — only show approved assets
+const MATCHES = [
+  { assetId:'a1', matchPercent:92, reasons: l==='ar'?['الموقع مطابق','المساحة المطلوبة متوفرة','النشاط المقترح مسموح به','المرافق المطلوبة متوفرة']:['Location matches requirement','Required size is available','Proposed activity is allowed','Required facilities are available'] },
+];
+
+function matchCard(m) {
+  const a = DB.assets.find(x=>x.id===m.assetId);
+  if(!a) return '';
+  const nm = l==='ar'?a.nameAr:a.nameEn;
+  const city = l==='ar'?a.cityAr:a.cityEn;
+  const pct = m.matchPercent;
+  const ringColor = pct>=85?'var(--emerald-500)':pct>=65?'var(--blue-500)':'var(--orange-600)';
+  const headerBg = pct>=85?'var(--emerald-50)':pct>=65?'var(--blue-50)':'var(--orange-50)';
+  const headerBorder = pct>=85?'var(--emerald-200)':pct>=65?'var(--blue-100)':'var(--orange-200)';
+  const headerColor = pct>=85?'var(--emerald-700)':pct>=65?'var(--blue-700)':'var(--orange-700)';
+
+  // SVG ring
+  const dash = pct;
+  const ringHtml = `<div class="match-ring">
+    <svg width="48" height="48" viewBox="0 0 36 36" style="transform:rotate(-90deg)">
+      <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e5e7eb" stroke-width="3"/>
+      <circle cx="18" cy="18" r="15.9" fill="none" stroke="${ringColor}" stroke-width="3" stroke-dasharray="${dash} ${100-dash}" stroke-linecap="round"/>
+    </svg>
+    <div class="match-ring-label" style="color:${ringColor};font-weight:800">${pct}%</div>
+  </div>`;
+
+  return `<div class="card" style="border-width:2px;border-color:var(--gray-200)">
+    <div class="flex justify-between items-center px-1 pb-4 mb-4" style="border-bottom:1px solid var(--gray-100)">
+      <span class="font-bold text-gray-900">${nm}</span>
+      <div class="flex items-center gap-2">
+        ${ringHtml}
+        <div class="text-xs text-gray-500">${t('match.matchPercent')}</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 text-sm text-gray-500 mb-4">${svgIcon('map-pin',13)} ${city} · ${a.size?.toLocaleString()} ${t('common.sqm')}</div>
+    <div class="mb-4">
+      <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">${t('match.reasons')}</div>
+      <ul class="space-y-2">${m.reasons.map(r=>`<li class="flex items-center gap-2 text-sm text-gray-700"><span style="color:var(--emerald-500);flex-shrink:0">${svgIcon('check-circle',14)}</span>${r}</li>`).join('')}</ul>
+    </div>
+    <div class="flex gap-2">
+      <button class="btn btn-outline btn-sm flex-1 justify-center" onclick="viewAssetDetail('${a.id}')">${t('match.viewAsset')}</button>
+      <a href="submit-offer.html?asset=${a.id}" class="btn btn-primary btn-sm flex-1 justify-center">${t('match.submitOffer')}</a>
+    </div>
+  </div>`;
+}
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('investor','ai-matches.html')}
+    <main class="main-content">
+      <div class="flex items-center gap-3 mb-2">${svgIcon('cpu',20)} <h1 class="text-xl font-bold text-gray-900">${t('match.aiTitle')}</h1></div>
+      <p class="text-sm text-gray-500 mb-6">${l==='ar'?'نتائج المطابقة الذكية بناءً على متطلباتك':'Smart matching results based on your requirements'}</p>
+      ${MATCHES.length===0
+        ? `<div class="card-dashed">${svgIcon('cpu',32)}<p class="text-gray-400 mt-3">${t('match.noMatches')}</p></div>`
+        : `<div class="space-y-5">${MATCHES.map(matchCard).join('')}</div>`
+      }
+    </main>
+  </div>
+</div>`;
+
+function viewAssetDetail(id) {
+  const a = DB.assets.find(x=>x.id===id);
+  if(!a) return;
+  const nm = l==='ar'?a.nameAr:a.nameEn;
+  const desc = l==='ar'?a.descriptionAr:a.descriptionEn;
+  const acts = (l==='ar'?a.allowedActivitiesAr:a.allowedActivitiesEn)||[];
+  const body = `<div class="space-y-4 text-sm">
+    <div class="flex items-center gap-2 text-gray-500">${svgIcon('map-pin',13)} ${l==='ar'?a.cityAr:a.cityEn} · ${a.size?.toLocaleString()} ${t('common.sqm')} · ${t('asset.types.'+a.type)}</div>
+    ${desc?`<p class="text-gray-600 leading-relaxed">${desc}</p>`:''}
+    <div><div class="font-semibold text-gray-700 mb-2">${t('asset.facilitiesLabel')}</div>
+      <div class="flex flex-wrap gap-2">${(a.facilities||[]).map(f=>`<span style="display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .75rem;background:var(--emerald-50);color:var(--emerald-700);border-radius:9999px;font-size:.75rem">${svgIcon('check-circle',12)} ${t('asset.facilities.'+f)}</span>`).join('')}</div>
+    </div>
+    <div><div class="font-semibold text-gray-700 mb-2">${t('asset.allowedActivitiesLabel')}</div>
+      <div class="flex flex-wrap gap-2">${acts.map(ac=>`<span style="padding:.3rem .75rem;background:var(--blue-50);color:var(--blue-600);border-radius:9999px;font-size:.75rem">${ac}</span>`).join('')}</div>
+    </div>
+  </div>`;
+  showModal(nm, body, `
+    <button class="btn btn-outline btn-sm" onclick="closeModal()">${t('common.close')}</button>
+    <a href="submit-offer.html?asset=${id}" class="btn btn-primary btn-sm">${t('match.submitOffer')}</a>`);
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>تأهيل صاحب الأصل | Owner Onboarding</title><link rel="stylesheet" href="style.css"></head>
+<body style="background:var(--gray-50)">
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['general','owner','investor'])) {}
+else {
+const STEPS = t('onboarding.ownerSteps');
+let currentStep = 0;
+let confirmed = false;
+let assetType = '';
+let goals = [];
+
+function renderStep() {
+  const stepsHtml = STEPS.map((s,i)=>`
+    <div style="display:flex;align-items:center;flex:1">
+      <div class="wizard-step-dot ${i<currentStep?'done':i===currentStep?'current':'future'}">${i<currentStep?'✓':i+1}</div>
+      ${i<STEPS.length-1?`<div class="wizard-line ${i<currentStep?'done':''}"></div>`:''}
+    </div>`).join('');
+
+  let body = '';
+  if(currentStep===0){
+    body=`<p class="text-sm text-gray-600 leading-relaxed mb-4">${STEPS[0].d}</p>
+    <label class="flex items-start gap-3 cursor-pointer">
+      <input type="checkbox" id="cb-confirm" ${confirmed?'checked':''} style="margin-top:.2rem;width:1rem;height:1rem;accent-color:var(--emerald-600)">
+      <span class="text-sm text-gray-700">${t('onboarding.retiredConfirm')}</span>
+    </label>`;
+  } else if(currentStep===1){
+    const types = ['farm','land','property','shop','floor','space'];
+    body=`<p class="text-sm text-gray-500 mb-4">${t('asset.typeLabel')}</p>
+    <div class="grid-3">${types.map(tp=>`<button class="toggle-btn ${assetType===tp?'active':''}" onclick="pickType('${tp}')">${t('asset.types.'+tp)}</button>`).join('')}</div>`;
+  } else if(currentStep===2){
+    const opts = State.lang==='ar'
+      ? ['عائد مالي ثابت','حصة من الأرباح','تثمين الأصل','الحفاظ على الملكية']
+      : ['Fixed financial return','Revenue share','Asset appreciation','Ownership preservation'];
+    body=`<p class="text-sm text-gray-500 mb-4">${State.lang==='ar'?'اختر أهدافك (يمكن أكثر من هدف)':'Select your goals (multiple allowed)'}</p>
+    <div class="space-y-3">${opts.map(o=>`<label class="flex items-center gap-3 cursor-pointer">
+      <input type="checkbox" ${goals.includes(o)?'checked':''} onchange="toggleGoal('${o}')" style="width:1rem;height:1rem;accent-color:var(--emerald-600)">
+      <span class="text-sm text-gray-700">${o}</span>
+    </label>`).join('')}</div>`;
+  } else if(currentStep===3){
+    body=`<div class="alert alert-emerald mb-4">${svgIcon('shield',20)}
+      <div><p class="font-semibold mb-1">${t('onboarding.ownershipNote')}</p><p class="text-sm">${t('onboarding.commissionNote')}</p></div>
+    </div>
+    <div class="card" style="background:var(--gray-50);font-size:.875rem;color:var(--gray-600)">${State.lang==='ar'?'عمولة المنصة: 2.5٪ من قيمة كل اتفاقية. تُخصم تلقائياً.':'Platform commission: 2.5% of each agreement value. Deducted automatically.'}</div>`;
+  } else {
+    body=`<div class="flex items-center gap-2 mb-4" style="color:var(--emerald-700)">${svgIcon('check-circle',22)}<span class="font-semibold">${State.lang==='ar'?'معلوماتك جاهزة للتأكيد':'Your information is ready to confirm'}</span></div>
+    <div class="space-y-3 text-sm">
+      <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid var(--gray-100)"><span class="text-gray-500">${t('asset.typeLabel')}</span><span class="font-medium">${assetType?t('asset.types.'+assetType):'—'}</span></div>
+      <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid var(--gray-100)"><span class="text-gray-500">${State.lang==='ar'?'الأهداف':'Goals'}</span><span class="font-medium">${goals.join('، ') || '—'}</span></div>
+      <div class="flex justify-between" style="padding:.5rem 0"><span class="text-gray-500">${State.lang==='ar'?'عمولة المنصة':'Platform Commission'}</span><span class="font-medium" style="color:var(--emerald-700)">2.5%</span></div>
+    </div>`;
+  }
+
+  const isFirst = currentStep===0;
+  const isLast  = currentStep===STEPS.length-1;
+  const nextDis = (currentStep===0&&!confirmed)||(currentStep===1&&!assetType)||(currentStep===2&&goals.length===0);
+
+  document.getElementById('root').innerHTML = `
+  ${buildNavbar()}
+  <main style="flex:1;padding:2.5rem 1rem">
+    <div class="container-sm">
+      <div class="mb-8">
+        <div class="wizard-steps">${stepsHtml}</div>
+        <div style="font-size:.75rem;color:var(--gray-400);margin-bottom:.25rem">${State.lang==='ar'?`الخطوة ${currentStep+1} من ${STEPS.length}`:`Step ${currentStep+1} of ${STEPS.length}`}</div>
+        <h2 class="text-xl font-bold text-gray-900">${STEPS[currentStep].t}</h2>
+        <p class="text-sm text-gray-500 mt-1">${STEPS[currentStep].d}</p>
+      </div>
+      <div class="card mb-6">${body}</div>
+      <div class="flex justify-between">
+        <button class="btn btn-outline" onclick="prevStep()" ${isFirst?'disabled':''}>← ${State.lang==='ar'?'السابق':'Back'}</button>
+        ${isLast
+          ? `<button class="btn btn-primary" onclick="finish()">${State.lang==='ar'?'تأكيد والمتابعة':'Confirm & Continue'}</button>`
+          : `<button class="btn btn-primary" onclick="nextStep()" ${nextDis?'disabled':''}>${State.lang==='ar'?'التالي':'Next'} →</button>`
+        }
+      </div>
+    </div>
+  </main>`;
+
+  // Re-attach live checkbox listeners
+  const cbConfirm = document.getElementById('cb-confirm');
+  if(cbConfirm) cbConfirm.addEventListener('change', e=>{ confirmed=e.target.checked; renderStep(); });
+}
+
+function nextStep(){ if(currentStep<STEPS.length-1){ currentStep++; renderStep(); } }
+function prevStep(){ if(currentStep>0){ currentStep--; renderStep(); } }
+function pickType(tp){ assetType=tp; renderStep(); }
+function toggleGoal(g){ goals=goals.includes(g)?goals.filter(x=>x!==g):[...goals,g]; renderStep(); }
+function finish(){ upgradeRole('owner'); location.href='owner-dashboard.html'; }
+
+renderStep();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>العمولات | Commissions</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['admin'])) {}
+else {
+const l = State.lang;
+const paid = DB.payments.filter(p=>p.status==='paid');
+const statusColors = {paid:'emerald',pending:'orange',upcoming:'gray'};
+
+const tableHtml = `<div class="table-wrap"><table>
+  <thead><tr>
+    <th>${t('returns.period')}</th>
+    <th>${l==='ar'?'إجمالي الإيرادات':'Gross Revenue'}</th>
+    <th>${l==='ar'?'العمولة (2.5٪)':'Commission (2.5%)'}</th>
+    <th>${l==='ar'?'صافي المالك':'Net to Owner'}</th>
+    <th>${t('returns.status')}</th>
+  </tr></thead>
+  <tbody>${DB.payments.map(p=>`<tr>
+    <td>${p.period}</td>
+    <td>${p.grossAmount?.toLocaleString()||'—'} ${p.grossAmount?t('common.riyal'):''}</td>
+    <td class="font-medium" style="color:var(--purple-600)">${p.commissionAmount?.toLocaleString()||'—'} ${p.commissionAmount?t('common.riyal'):''}</td>
+    <td>${p.netToOwner?.toLocaleString()||'—'} ${p.netToOwner?t('common.riyal'):''}</td>
+    <td>${badge(t('returns.statuses.'+p.status),statusColors[p.status]||'gray')}</td>
+  </tr>`).join('')}</tbody>
+</table></div>`;
+
+const totalComm = paid.reduce((s,p)=>s+(p.commissionAmount||0),0);
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('admin','admin-commissions.html')}
+    <main class="main-content">
+      <div class="flex items-center gap-3 mb-6">${svgIcon('dollar-sign',20)} <h1 class="text-xl font-bold text-gray-900">${t('nav.commissions')}</h1></div>
+      <div class="grid-2 mb-6" style="max-width:32rem">
+        <div class="stat-card"><div class="stat-icon" style="background:var(--purple-50);color:var(--purple-600)">${svgIcon('dollar-sign',20)}</div><div><div class="stat-value">${totalComm.toLocaleString()}</div><div class="stat-label">${l==='ar'?'إجمالي العمولات المحصّلة':'Total Commissions Collected'}</div><div class="stat-sub">${t('common.riyal')}</div></div></div>
+        <div class="stat-card"><div class="stat-icon stat-icon-emerald">${svgIcon('trending-up',20)}</div><div><div class="stat-value">2.5%</div><div class="stat-label">${l==='ar'?'نسبة العمولة الثابتة':'Fixed Commission Rate'}</div></div></div>
+      </div>
+      ${tableHtml}
+    </main>
+  </div>
+</div>`;
+}
+</script>
+</body>
+</html>

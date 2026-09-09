@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>المدفوعات | Payments</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['investor'])) {}
+else {
+const l = State.lang;
+const pays = DB.investorPayments;
+const paidPays = pays.filter(p=>p.status==='paid');
+const totalPaid = paidPays.reduce((s,p)=>s+(p.netPaid||0),0);
+const totalComm = paidPays.reduce((s,p)=>s+(p.commission||0),0);
+const nextPay = pays.find(p=>p.status==='pending');
+const statusColors = {paid:'emerald',pending:'orange',upcoming:'gray'};
+
+const tableHtml = `<div class="table-wrap"><table>
+  <thead><tr>
+    <th>${t('returns.period')}</th>
+    <th>${l==='ar'?'الإيرادات':'Revenue'}</th>
+    <th>${l==='ar'?'الحصة (%)':'Share (%)'}</th>
+    <th>${l==='ar'?'المبلغ المستحق':'Amount Due'}</th>
+    <th>${l==='ar'?'العمولة':'Commission'}</th>
+    <th>${l==='ar'?'الإجمالي المدفوع':'Total Paid'}</th>
+    <th>${t('returns.status')}</th>
+  </tr></thead>
+  <tbody>${pays.map(p=>`<tr>
+    <td>${p.period}</td>
+    <td>${p.revenue?.toLocaleString()||'—'}</td>
+    <td>${p.sharePercent}%</td>
+    <td>${p.shareDue?.toLocaleString()||'—'}</td>
+    <td>${p.commission?.toLocaleString()||'—'}</td>
+    <td class="font-medium">${p.netPaid?.toLocaleString()||'—'}</td>
+    <td>${badge(t('returns.statuses.'+p.status),statusColors[p.status]||'gray')}</td>
+  </tr>`).join('')}
+  </tbody>
+</table></div>`;
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('investor','investor-payments.html')}
+    <main class="main-content">
+      <div class="flex items-center gap-3 mb-6">${svgIcon('credit-card',20)} <h1 class="text-xl font-bold text-gray-900">${t('nav.payments')}</h1></div>
+      <div class="grid-3 mb-6">
+        <div class="stat-card"><div class="stat-icon stat-icon-emerald">${svgIcon('credit-card',20)}</div><div><div class="stat-value">${totalPaid.toLocaleString()}</div><div class="stat-label">${l==='ar'?'إجمالي المدفوعات':'Total Paid'}</div><div class="stat-sub">${t('common.riyal')}</div></div></div>
+        <div class="stat-card"><div class="stat-icon stat-icon-orange">${svgIcon('calendar',20)}</div><div><div class="stat-value">${nextPay?nextPay.netPaid?.toLocaleString()||'—':'—'}</div><div class="stat-label">${t('returns.nextPayment')}</div><div class="stat-sub">${nextPay?.dueDate||''}</div></div></div>
+        <div class="stat-card"><div class="stat-icon stat-icon-gray">${svgIcon('dollar-sign',20)}</div><div><div class="stat-value">${totalComm.toLocaleString()}</div><div class="stat-label">${l==='ar'?'إجمالي العمولات المدفوعة':'Total Commission Paid'}</div><div class="stat-sub">${t('common.riyal')}</div></div></div>
+      </div>
+      ${tableHtml}
+    </main>
+  </div>
+</div>`;
+}
+</script>
+</body>
+</html>

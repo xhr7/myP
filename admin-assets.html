@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>الأصول | Admin Assets</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['admin'])) {}
+else {
+const l = State.lang;
+
+function renderAssets() {
+  const tableHtml = `<div class="table-wrap"><table>
+    <thead><tr>
+      <th>${l==='ar'?'الأصل':'Asset'}</th>
+      <th>${l==='ar'?'النوع':'Type'}</th>
+      <th>${l==='ar'?'الموقع':'Location'}</th>
+      <th>${l==='ar'?'المساحة':'Size'}</th>
+      <th>${l==='ar'?'الحالة':'Status'}</th>
+      <th>${l==='ar'?'إجراء':'Action'}</th>
+    </tr></thead>
+    <tbody>${DB.assets.map(a=>`<tr>
+      <td class="font-medium">${l==='ar'?a.nameAr:a.nameEn}</td>
+      <td>${t('asset.types.'+a.type)}</td>
+      <td>${l==='ar'?a.cityAr:a.cityEn}</td>
+      <td>${a.size?.toLocaleString()} ${t('common.sqm')}</td>
+      <td>${assetStatusBadge(a.status)}</td>
+      <td>
+        ${a.status==='under_review'?`
+          <button class="btn btn-sm" style="background:var(--emerald-600);color:#fff;margin-inline-end:.35rem" onclick="approveA('${a.id}')">${t('admin.approve')}</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectA('${a.id}')">${t('admin.reject')}</button>
+        `:a.status==='approved'?`<span style="font-size:.8rem;color:var(--emerald-600)">${l==='ar'?'تمت الموافقة':'Approved'}</span>`
+        :`<span style="font-size:.8rem;color:var(--gray-400)">${t('asset.statuses.'+a.status)}</span>`}
+      </td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+  document.getElementById('assets-table').innerHTML = tableHtml;
+}
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('admin','admin-assets.html')}
+    <main class="main-content">
+      <div class="flex items-center gap-3 mb-6">${svgIcon('check-square',20)} <h1 class="text-xl font-bold text-gray-900">${t('nav.assets')}</h1></div>
+      <div id="assets-table"></div>
+    </main>
+  </div>
+</div>`;
+
+renderAssets();
+
+function approveA(id) { const a=DB.assets.find(x=>x.id===id); if(a){ a.status='approved'; renderAssets(); } }
+function rejectA(id)  { const a=DB.assets.find(x=>x.id===id); if(a){ a.status='rejected'; renderAssets(); } }
+}
+</script>
+</body>
+</html>

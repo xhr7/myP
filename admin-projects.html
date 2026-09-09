@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>المشاريع | Admin Projects</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['admin'])) {}
+else {
+const l = State.lang;
+const tableHtml = `<div class="table-wrap"><table>
+  <thead><tr>
+    <th>${l==='ar'?'المشروع':'Project'}</th>
+    <th>${l==='ar'?'الأصل':'Asset'}</th>
+    <th>${l==='ar'?'المالك':'Owner'}</th>
+    <th>${l==='ar'?'المشغّل':'Operator'}</th>
+    <th>${l==='ar'?'التقدم':'Progress'}</th>
+    <th>${l==='ar'?'المدة':'Period'}</th>
+    <th>${l==='ar'?'الحالة':'Status'}</th>
+  </tr></thead>
+  <tbody>${DB.projects.map(p=>`<tr>
+    <td class="font-medium">${l==='ar'?p.projectTypeAr:p.projectTypeEn}</td>
+    <td>${l==='ar'?p.assetNameAr:p.assetNameEn}</td>
+    <td>${l==='ar'?p.ownerNameAr:p.ownerNameEn}</td>
+    <td>${l==='ar'?p.investorNameAr:p.investorNameEn}</td>
+    <td><div style="display:flex;align-items:center;gap:.5rem;min-width:6rem"><div class="progress-wrap" style="flex:1"><div class="progress-bar" style="width:${p.progressPercent}%"></div></div><span style="font-size:.75rem;color:var(--gray-500)">${p.progressPercent}%</span></div></td>
+    <td style="white-space:nowrap">${p.startDate} → ${p.endDate}</td>
+    <td>${badge(l==='ar'?'نشط':'Active','emerald')}</td>
+  </tr>`).join('')}</tbody>
+</table></div>`;
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('admin','admin-projects.html')}
+    <main class="main-content">
+      <div class="flex items-center gap-3 mb-6">${svgIcon('rocket',20)} <h1 class="text-xl font-bold text-gray-900">${t('nav.activeProjects')}</h1></div>
+      ${tableHtml}
+    </main>
+  </div>
+</div>`;
+}
+</script>
+</body>
+</html>

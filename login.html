@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>تسجيل الدخول | Login</title><link rel="stylesheet" href="style.css"></head>
+<body style="background:var(--gray-50)">
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+document.getElementById('root').innerHTML = `
+${buildNavbar()}
+<main style="flex:1;display:flex;align-items:center;justify-content:center;padding:3rem 1rem">
+  <div style="width:100%;max-width:26rem">
+    <div class="card shadow-sm" style="padding:2rem">
+      <div class="text-center mb-6">
+        <div style="width:4rem;height:2.75rem;margin:0 auto .75rem">${LOGO_SVG}</div>
+        <h1 class="text-xl font-bold text-gray-900">${t('auth.loginTitle')}</h1>
+      </div>
+      <div id="err-box" class="error-box mb-4 hidden"></div>
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="form-label">${t('auth.email')}</label>
+          <input id="f-email" class="form-input" type="email" placeholder="abufahad@demo.com" dir="ltr" required>
+        </div>
+        <div>
+          <label class="form-label">${t('auth.password')}</label>
+          <input id="f-pw" class="form-input" type="password" dir="ltr">
+        </div>
+        <button type="submit" class="btn btn-primary w-full justify-center" style="margin-top:.5rem">${t('auth.loginBtn')}</button>
+      </form>
+      <div class="demo-box mt-4">
+        <div style="margin-bottom:.35rem;font-weight:500">${t('auth.demoAccounts')}:</div>
+        abufahad@demo.com — ${State.lang==='ar'?'صاحب أصل':'Owner'}<br>
+        khalid@demo.com — ${State.lang==='ar'?'مشغّل':'Operator'}<br>
+        ${State.lang==='ar'?'أي بريد آخر — مستخدم عام':'Any other email — General user'}
+      </div>
+      <p class="text-sm text-gray-500 text-center mt-5">
+        ${t('auth.noAccount')} <a href="register.html" style="color:var(--emerald-600);font-weight:500">${t('auth.registerLink')}</a>
+      </p>
+      <p class="text-xs text-gray-400 text-center mt-2">${t('auth.demoHint')}</p>
+    </div>
+  </div>
+</main>`;
+
+document.getElementById('login-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const email = document.getElementById('f-email').value.trim();
+  const pw    = document.getElementById('f-pw').value;
+  if (!email) { showErr(State.lang==='ar'?'يرجى إدخال البريد الإلكتروني':'Please enter your email'); return; }
+  doLogin(email, pw);
+  location.href = getDashboardLink();
+});
+
+function showErr(msg) {
+  const el = document.getElementById('err-box');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+</script>
+</body>
+</html>

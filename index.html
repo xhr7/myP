@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>عائد | AAYED</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+document.getElementById('root').innerHTML = `
+${buildNavbar({ publicLinks: true })}
+
+<!-- Hero -->
+<section class="bg-hero py-20" style="flex:1">
+  <div class="container-sm text-center">
+    <!-- Logo mark — large display in hero -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:.85rem;margin-bottom:1.5rem">
+      <div style="width:5rem;height:3.4rem;flex-shrink:0">${LOGO_SVG}</div>
+      <div style="text-align:start">
+        <div style="font-size:1.75rem;font-weight:800;color:var(--gray-900);line-height:1">عائد</div>
+        <div style="font-size:1rem;font-weight:600;color:var(--emerald-600);letter-spacing:.05em">AAYED</div>
+      </div>
+    </div>
+    <div class="inline-flex items-center gap-2 mb-5" style="background:var(--emerald-100);color:var(--emerald-700);padding:.3rem .9rem;border-radius:9999px;font-size:.75rem;font-weight:600">
+      ${svgIcon('zap',12)} ${t('common.prototype')}
+    </div>
+    <h1 style="font-size:clamp(2rem,5vw,3rem);font-weight:800;color:var(--gray-900);line-height:1.25;margin-bottom:1rem">${t('hero.tagline')}</h1>
+    <p style="font-size:1.1rem;color:var(--gray-600);margin-bottom:2rem;max-width:36rem;margin-inline:auto;line-height:1.7">${t('hero.taglineSub')}</p>
+    <div class="flex wrap gap-4 justify-center mb-4">
+      <a href="register.html" class="btn btn-primary" style="font-size:1rem;padding:.75rem 1.75rem">
+        ${t('hero.ctaOwner')} ${svgIcon('arrow-right',18)}
+      </a>
+      <a href="register.html" class="btn btn-secondary" style="font-size:1rem;padding:.75rem 1.75rem">
+        ${t('hero.ctaInvestor')}
+      </a>
+    </div>
+    <a href="how-it-works.html" style="font-size:.875rem;color:var(--gray-500);text-decoration:underline;text-underline-offset:.2rem">${t('hero.ctaLearnMore')}</a>
+  </div>
+</section>
+
+<!-- Problem -->
+<section class="py-16 bg-white">
+  <div class="container">
+    <h2 class="text-2xl font-bold text-gray-900 text-center mb-8">${t('problem.title')}</h2>
+    <div class="grid-3">
+      <div class="card" style="background:var(--orange-50);border-color:var(--orange-200)">
+        <div style="width:2.5rem;height:2.5rem;background:rgba(234,88,12,.15);border-radius:.5rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;color:var(--orange-600)">${svgIcon('building',20)}</div>
+        <h3 class="font-bold text-gray-900 mb-2">${t('problem.ownerTitle')}</h3>
+        <p class="text-sm text-gray-600 leading-relaxed">${t('problem.ownerDesc')}</p>
+      </div>
+      <div class="card" style="background:var(--blue-50);border-color:var(--blue-100)">
+        <div style="width:2.5rem;height:2.5rem;background:rgba(37,99,235,.12);border-radius:.5rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;color:var(--blue-600)">${svgIcon('trending-up',20)}</div>
+        <h3 class="font-bold text-gray-900 mb-2">${t('problem.investorTitle')}</h3>
+        <p class="text-sm text-gray-600 leading-relaxed">${t('problem.investorDesc')}</p>
+      </div>
+      <div class="card" style="background:var(--emerald-50);border-color:var(--emerald-200)">
+        <div style="width:2.5rem;height:2.5rem;background:rgba(5,150,105,.12);border-radius:.5rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;color:var(--emerald-600)">${svgIcon('zap',20)}</div>
+        <h3 class="font-bold text-gray-900 mb-2">${t('problem.gapTitle')}</h3>
+        <p class="text-sm text-gray-600 leading-relaxed">${t('problem.gapDesc')}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- For Whom -->
+<section class="py-16" style="background:var(--gray-50)">
+  <div class="container">
+    <h2 class="text-2xl font-bold text-gray-900 text-center mb-8">${t('forWhom.title')}</h2>
+    <div class="grid-2" style="max-width:52rem;margin:0 auto">
+      <div class="card card-hover">
+        <div class="flex items-center gap-3 mb-4">
+          <div style="width:2.5rem;height:2.5rem;background:var(--emerald-100);border-radius:.5rem;display:flex;align-items:center;justify-content:center;color:var(--emerald-600)">${svgIcon('building',20)}</div>
+          <h3 class="font-bold text-gray-900">${t('forWhom.ownerTitle')}</h3>
+        </div>
+        <ul class="space-y-3 mb-5">${t('forWhom.ownerPoints').map(p=>`<li class="flex items-center gap-2 text-sm text-gray-700"><span style="color:var(--emerald-500);flex-shrink:0">${svgIcon('check-circle',15)}</span>${p}</li>`).join('')}</ul>
+        <a href="register.html" class="btn btn-primary w-full justify-center">${t('hero.ctaOwner')}</a>
+      </div>
+      <div class="card card-hover">
+        <div class="flex items-center gap-3 mb-4">
+          <div style="width:2.5rem;height:2.5rem;background:var(--blue-100);border-radius:.5rem;display:flex;align-items:center;justify-content:center;color:var(--blue-600)">${svgIcon('trending-up',20)}</div>
+          <h3 class="font-bold text-gray-900">${t('forWhom.investorTitle')}</h3>
+        </div>
+        <ul class="space-y-3 mb-5">${t('forWhom.investorPoints').map(p=>`<li class="flex items-center gap-2 text-sm text-gray-700"><span style="color:var(--blue-500);flex-shrink:0">${svgIcon('check-circle',15)}</span>${p}</li>`).join('')}</ul>
+        <a href="register.html" class="btn btn-blue w-full justify-center">${t('hero.ctaInvestor')}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Value Prop -->
+<section class="py-16 bg-white">
+  <div class="container-sm text-center">
+    <h2 class="text-2xl font-bold text-gray-900 mb-4">${t('valueProposition.title')}</h2>
+    <p class="text-lg font-semibold text-emerald-700 mb-5">${t('valueProposition.coreValue')}</p>
+    <div class="grid-2">
+      <div class="card" style="background:var(--emerald-50);text-align:start">
+        <div style="color:var(--emerald-600);margin-bottom:.5rem">${svgIcon('users',20)}</div>
+        <p class="text-sm text-gray-700">${t('valueProposition.ownerValue')}</p>
+      </div>
+      <div class="card" style="background:var(--blue-50);text-align:start">
+        <div style="color:var(--blue-600);margin-bottom:.5rem">${svgIcon('zap',20)}</div>
+        <p class="text-sm text-gray-700">${t('valueProposition.investorValue')}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Strip -->
+<section class="bg-cta py-14 text-center">
+  <h2 style="font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:.75rem">${State.lang==='ar'?'ابدأ اليوم مع عائد':'Get Started with AAYED Today'}</h2>
+  <p style="color:rgba(255,255,255,.8);margin-bottom:1.5rem;font-size:.9rem">${t('hero.taglineSub')}</p>
+  <a href="register.html" class="btn" style="background:#fff;color:var(--emerald-700);font-weight:700;padding:.75rem 2rem">${t('nav.register')} ${svgIcon('arrow-right',16)}</a>
+</section>
+
+${buildFooter()}
+`;
+</script>
+</body>
+</html>

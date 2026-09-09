@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>كيف يعمل عائد | How AAYED Works</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+const steps = t('howItWorks.steps');
+const timelineHtml = `<ol class="timeline">${steps.map((s,i)=>{
+  const isLast = i === steps.length-1;
+  const isDone = i < steps.length-1;
+  const dotCls = isDone ? 'tl-dot-done' : 'tl-dot-active';
+  const titleCls = isDone ? 'tl-title-done' : 'tl-title-active';
+  const lineCls = isDone ? 'tl-line-done' : 'tl-line';
+  return `<li class="tl-item">
+    <div class="tl-line-wrap">
+      <div class="tl-dot ${dotCls}">${isDone ? '✓' : i+1}</div>
+      ${!isLast ? `<div class="tl-line ${lineCls}"></div>` : ''}
+    </div>
+    <div class="tl-content">
+      <div class="${titleCls}">${i+1}. ${s.t}</div>
+      <div class="tl-desc">${s.d}</div>
+      ${s.note ? `<div style="margin-top:.5rem;display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .75rem;background:var(--emerald-50);color:var(--emerald-700);border-radius:9999px;font-size:.75rem;font-weight:600">${svgIcon('shield',12)} ${s.note}</div>` : ''}
+    </div>
+  </li>`;
+}).join('')}</ol>`;
+
+document.getElementById('root').innerHTML = `
+${buildNavbar({ publicLinks: true })}
+<main style="flex:1;padding:3rem 1.25rem">
+  <div class="container-sm">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-extrabold text-gray-900 mb-2">${t('howItWorks.title')}</h1>
+      <p class="text-gray-500">${t('howItWorks.subtitle')}</p>
+    </div>
+    <div class="alert alert-emerald mb-8">
+      ${svgIcon('shield',20)}
+      <p class="font-semibold">${t('howItWorks.ownershipNote')}</p>
+    </div>
+    ${timelineHtml}
+  </div>
+</main>
+${buildFooter()}`;
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>لوحة تحكم المشغّل | Operator Dashboard</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['investor'])) {}
+else {
+const u = State.user;
+const nm = State.lang==='ar'?u.nameAr:u.nameEn;
+const myAgreements = DB.agreements.filter(a=>a.investorId===u.id);
+const myProjects   = DB.projects.filter(p=>p.investorId===u.id);
+const myOffers     = DB.offers.filter(o=>o.investorId===u.id);
+const notifs = (DB.notifications[u.id]||[]).filter(n=>!n.read);
+const paidTotal = DB.investorPayments.filter(p=>p.status==='paid').reduce((s,p)=>s+(p.netPaid||0),0);
+
+const notifsHtml = notifs.length===0 ? '' : `
+  <div>
+    <h2 class="font-bold text-gray-900 mb-3">${State.lang==='ar'?'الإشعارات الجديدة':'New Notifications'}</h2>
+    <div class="space-y-2">${notifs.map(n=>`
+      <div class="card flex items-start gap-3">
+        <span style="width:.5rem;height:.5rem;background:var(--blue-500);border-radius:50%;margin-top:.4rem;flex-shrink:0"></span>
+        <div>
+          <div class="text-sm font-semibold text-gray-900">${State.lang==='ar'?n.titleAr:n.titleEn}</div>
+          <div class="text-xs text-gray-500 mt-0.5">${State.lang==='ar'?n.descAr:n.descEn}</div>
+        </div>
+      </div>`).join('')}</div>
+  </div>`;
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('investor','investor-dashboard.html')}
+    <main class="main-content">
+      <div class="space-y-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">${State.lang==='ar'?`مرحباً، ${nm}`:`Welcome, ${nm}`}</h1>
+            <p class="text-sm text-gray-500 mt-1">${State.lang==='ar'?'لوحة تحكم المشغّل':'Operator Dashboard'}</p>
+          </div>
+          <a href="investor-requirements.html" class="btn btn-blue btn-sm">${svgIcon('search',15)} ${t('nav.requirements')}</a>
+        </div>
+        <div class="grid-4">
+          <div class="stat-card"><div class="stat-icon stat-icon-emerald">${svgIcon('file-text',20)}</div><div><div class="stat-value">${myAgreements.length}</div><div class="stat-label">${t('nav.agreements')}</div></div></div>
+          <div class="stat-card"><div class="stat-icon stat-icon-blue">${svgIcon('rocket',20)}</div><div><div class="stat-value">${myProjects.length}</div><div class="stat-label">${t('nav.projects')}</div></div></div>
+          <div class="stat-card"><div class="stat-icon stat-icon-orange">${svgIcon('inbox',20)}</div><div><div class="stat-value">${myOffers.length}</div><div class="stat-label">${State.lang==='ar'?'العروض المقدمة':'Submitted Offers'}</div></div></div>
+          <div class="stat-card"><div class="stat-icon stat-icon-purple">${svgIcon('credit-card',20)}</div><div><div class="stat-value">${paidTotal.toLocaleString()}</div><div class="stat-label">${State.lang==='ar'?'إجمالي المدفوعات':'Total Paid'}</div><div class="stat-sub">${t('common.riyal')}</div></div></div>
+        </div>
+        ${myProjects.length>0?`<div>
+          <h2 class="font-bold text-gray-900 mb-3">${t('nav.projects')}</h2>
+          <div class="space-y-3">${myProjects.map(p=>`
+            <div class="card">
+              <div class="flex justify-between items-start mb-3">
+                <div><h3 class="font-semibold text-gray-900">${State.lang==='ar'?p.projectTypeAr:p.projectTypeEn}</h3>
+                <p class="text-sm text-gray-500">${State.lang==='ar'?p.assetNameAr:p.assetNameEn}</p></div>
+                ${badge(State.lang==='ar'?'نشط':'Active','emerald')}
+              </div>
+              <div class="mb-2">
+                <div class="flex justify-between text-xs text-gray-500 mb-1"><span>${State.lang==='ar'?'التقدم':'Progress'}</span><span>${p.progressPercent}%</span></div>
+                <div class="progress-wrap"><div class="progress-bar" style="width:${p.progressPercent}%"></div></div>
+              </div>
+              <div class="text-xs text-gray-400">${p.startDate} → ${p.endDate}</div>
+            </div>`).join('')}
+          </div>
+        </div>`:''}
+        ${notifsHtml}
+      </div>
+    </main>
+  </div>
+</div>`;
+}
+</script>
+</body>
+</html>

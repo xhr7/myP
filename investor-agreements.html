@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>اتفاقياتي | My Agreements</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['investor'])) {}
+else {
+const u = State.user;
+const ags = DB.agreements.filter(a=>a.investorId===u.id);
+const l = State.lang;
+const statusColors = {pending:'orange',active:'emerald',completed:'blue'};
+
+function viewAg(id) {
+  const ag = DB.agreements.find(x=>x.id===id);
+  if(!ag) return;
+  const body = `<div class="space-y-4 text-sm">
+    <div class="alert alert-amber text-xs">${t('agreement.mockNote')}</div>
+    <div class="grid-2">
+      <div style="background:var(--gray-50);border-radius:.5rem;padding:.75rem"><div class="text-xs text-gray-400 mb-0.5">${t('agreement.ownerParty')}</div><div class="font-medium">${l==='ar'?ag.ownerNameAr:ag.ownerNameEn}</div></div>
+      <div style="background:var(--gray-50);border-radius:.5rem;padding:.75rem"><div class="text-xs text-gray-400 mb-0.5">${t('agreement.investorParty')}</div><div class="font-medium">${l==='ar'?ag.investorNameAr:ag.investorNameEn}</div></div>
+    </div>
+    <div><div class="text-xs text-gray-400 mb-0.5">${t('agreement.assetTitle')}</div><div class="font-medium">${l==='ar'?ag.assetNameAr:ag.assetNameEn}</div></div>
+    <div class="grid-2">
+      <div style="background:var(--gray-50);border-radius:.5rem;padding:.75rem"><div class="text-xs text-gray-400 mb-0.5">${t('agreement.periodTitle')}</div><div class="font-medium">${ag.startDate} → ${ag.endDate}</div></div>
+      <div style="background:var(--gray-50);border-radius:.5rem;padding:.75rem"><div class="text-xs text-gray-400 mb-0.5">${t('agreement.financialTitle')}</div><div class="font-medium">${l==='ar'?ag.financialDescAr:ag.financialDescEn}</div></div>
+    </div>
+    <div style="background:var(--emerald-50);border:1px solid var(--emerald-200);border-radius:.5rem;padding:.75rem">
+      <div class="text-xs text-gray-500 mb-0.5">${t('agreement.commissionTitle')}</div>
+      <div class="font-medium" style="color:var(--emerald-700)">${t('agreement.commissionNote')}</div>
+    </div>
+    <div class="alert alert-blue"><span style="flex-shrink:0">${svgIcon('shield',16)}</span><p class="text-xs">${t('agreement.ownershipClause')}</p></div>
+  </div>`;
+  showModal(t('agreement.title'), body, `<button class="btn btn-outline btn-sm" onclick="closeModal()">${t('common.close')}</button>`);
+}
+
+const listHtml = ags.length===0
+  ? `<div class="card-dashed">${svgIcon('file-text',32)}<p class="text-gray-400 mt-3">${t('common.noData')}</p></div>`
+  : `<div class="space-y-4">${ags.map(ag=>`
+  <div class="card">
+    <div class="flex justify-between items-start gap-3 mb-3">
+      <div>
+        <div class="flex items-center gap-2 mb-1">${svgIcon('file-text',15)} <span class="font-semibold">${l==='ar'?ag.assetNameAr:ag.assetNameEn}</span></div>
+        <div class="text-sm text-gray-500">${l==='ar'?ag.projectTypeAr:ag.projectTypeEn}</div>
+      </div>
+      ${badge(t('agreement.statuses.'+ag.status),statusColors[ag.status]||'gray')}
+    </div>
+    <div class="flex items-center gap-2 text-sm text-gray-600 mb-3">${svgIcon('calendar',12)} ${ag.startDate} → ${ag.endDate}</div>
+    <div class="flex justify-between items-center">
+      <span class="text-xs text-gray-400">${t('agreement.commissionTitle')}: ${ag.commissionRate}%</span>
+      <button class="btn btn-primary btn-sm" onclick="viewAg('${ag.id}')">${t('agreement.viewAgreement')}</button>
+    </div>
+  </div>`).join('')}</div>`;
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('investor','investor-agreements.html')}
+    <main class="main-content">
+      <div class="flex items-center gap-3 mb-6">${svgIcon('file-text',20)} <h1 class="text-xl font-bold text-gray-900">${t('nav.agreements')}</h1></div>
+      ${listHtml}
+    </main>
+  </div>
+</div>`;
+}
+</script>
+</body>
+</html>

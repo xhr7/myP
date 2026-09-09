@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>أصولي | My Assets</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['owner'])) {}
+else {
+const u = State.user;
+const myAssets = DB.assets.filter(a=>a.ownerId===u.id);
+
+const assetsHtml = myAssets.length===0
+  ? `<div class="card-dashed">${svgIcon('building',40)} <p class="text-gray-400 mt-3 mb-4">${t('common.noData')}</p><a href="add-asset.html" style="color:var(--emerald-600);font-size:.875rem">${t('asset.addTitle')}</a></div>`
+  : `<div class="grid-3">${myAssets.map(a=>`
+    <div class="card card-hover">
+      <div style="height:7rem;background:linear-gradient(135deg,var(--emerald-50),#f0fdf4);border-radius:.5rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;color:var(--emerald-300)">${svgIcon('building',36)}</div>
+      <div class="flex justify-between items-start gap-2 mb-2">
+        <span class="font-semibold text-gray-900">${State.lang==='ar'?a.nameAr:a.nameEn}</span>
+        ${assetStatusBadge(a.status)}
+      </div>
+      <div class="flex items-center gap-1 text-sm text-gray-500 mb-2">${svgIcon('map-pin',12)} ${State.lang==='ar'?a.cityAr:a.cityEn}</div>
+      <div class="flex items-center gap-3 text-sm text-gray-500 mb-3">
+        <span class="flex items-center gap-1">${svgIcon('maximize',12)} ${a.size?.toLocaleString()} ${t('common.sqm')}</span>
+        <span style="background:var(--gray-100);padding:.1rem .5rem;border-radius:9999px;font-size:.72rem">${t('asset.types.'+a.type)}</span>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-outline btn-sm flex-1 justify-center" onclick="viewAsset('${a.id}')">${t('common.view')}</button>
+      </div>
+    </div>`).join('')}</div>`;
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('owner','owner-assets.html')}
+    <main class="main-content">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-xl font-bold text-gray-900">${t('nav.myAssets')}</h1>
+        <a href="add-asset.html" class="btn btn-primary btn-sm">${svgIcon('plus-circle',15)} ${t('nav.addAsset')}</a>
+      </div>
+      ${assetsHtml}
+    </main>
+  </div>
+</div>`;
+}
+
+function viewAsset(id) {
+  const a = DB.assets.find(x=>x.id===id);
+  if(!a) return;
+  const nm = State.lang==='ar'?a.nameAr:a.nameEn;
+  const city = State.lang==='ar'?a.cityAr:a.cityEn;
+  const desc = State.lang==='ar'?a.descriptionAr:a.descriptionEn;
+  const acts = (State.lang==='ar'?a.allowedActivitiesAr:a.allowedActivitiesEn)||[];
+  const restr = State.lang==='ar'?a.restrictionsAr:a.restrictionsEn;
+  const body = `
+    <div class="space-y-4 text-sm">
+      <div class="flex justify-between items-start"><span class="font-semibold text-gray-900 text-base">${nm}</span>${assetStatusBadge(a.status)}</div>
+      <div class="flex items-center gap-1 text-gray-500">${svgIcon('map-pin',13)} ${city} · ${a.size?.toLocaleString()} ${t('common.sqm')}</div>
+      ${desc?`<p class="text-gray-600 leading-relaxed">${desc}</p>`:''}
+      <div>
+        <div class="font-semibold text-gray-700 mb-2">${t('asset.facilitiesLabel')}</div>
+        <div class="flex flex-wrap gap-2">${(a.facilities||[]).map(f=>`<span style="display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .75rem;background:var(--emerald-50);color:var(--emerald-700);border-radius:9999px;font-size:.75rem">${svgIcon('check-circle',12)} ${t('asset.facilities.'+f)}</span>`).join('')}</div>
+      </div>
+      <div>
+        <div class="font-semibold text-gray-700 mb-2">${t('asset.allowedActivitiesLabel')}</div>
+        <div class="flex flex-wrap gap-2">${acts.map(ac=>`<span style="padding:.3rem .75rem;background:var(--blue-50);color:var(--blue-600);border-radius:9999px;font-size:.75rem">${ac}</span>`).join('')}</div>
+      </div>
+      ${restr?`<div><div class="font-semibold text-gray-700 mb-1">${t('asset.restrictionsLabel')}</div><p class="text-gray-500">${restr}</p></div>`:''}
+    </div>`;
+  showModal(nm, body, `<button class="btn btn-outline btn-sm" onclick="closeModal()">${t('common.close')}</button>`);
+}
+</script>
+</body>
+</html>

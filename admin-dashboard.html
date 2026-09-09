@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>لوحة تحكم المشرف | Admin Dashboard</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['admin'])) {}
+else {
+const l = State.lang;
+const totalUsers = 3; // demo
+const totalAssets = DB.assets.length;
+const underReview = DB.assets.filter(a=>a.status==='under_review').length;
+const activeAgs = DB.agreements.filter(a=>a.status==='active').length;
+const activeProjs = DB.projects.filter(p=>p.status==='active').length;
+const totalComm = DB.payments.filter(p=>p.status==='paid').reduce((s,p)=>s+(p.commissionAmount||0),0);
+
+const pendingAssets = DB.assets.filter(a=>a.status==='under_review');
+const pendingHtml = pendingAssets.length===0
+  ? `<p class="text-gray-400 text-sm">${t('common.noData')}</p>`
+  : `<div class="space-y-3">${pendingAssets.map(a=>`
+  <div class="card flex justify-between items-start gap-4">
+    <div>
+      <div class="font-semibold text-gray-900">${l==='ar'?a.nameAr:a.nameEn}</div>
+      <div class="text-sm text-gray-500 mt-0.5">${l==='ar'?a.cityAr:a.cityEn} · ${t('asset.types.'+a.type)} · ${a.size?.toLocaleString()} ${t('common.sqm')}</div>
+    </div>
+    <div class="flex gap-2 flex-wrap">
+      <button class="btn btn-sm" style="background:var(--emerald-600);color:#fff" onclick="approveAsset('${a.id}')">${t('admin.approve')}</button>
+      <button class="btn btn-danger btn-sm" onclick="rejectAsset('${a.id}')">${t('admin.reject')}</button>
+      <button class="btn btn-outline btn-sm" onclick="viewAsset('${a.id}')">${t('common.view')}</button>
+    </div>
+  </div>`).join('')}</div>`;
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('admin','admin-dashboard.html')}
+    <main class="main-content">
+      <h1 class="text-2xl font-bold text-gray-900 mb-6">${t('admin.dashboardTitle')}</h1>
+      <div class="grid-4 mb-8">
+        <div class="stat-card"><div class="stat-icon stat-icon-emerald">${svgIcon('users',20)}</div><div><div class="stat-value">${totalUsers}</div><div class="stat-label">${t('admin.totalUsers')}</div></div></div>
+        <div class="stat-card"><div class="stat-icon stat-icon-blue">${svgIcon('building',20)}</div><div><div class="stat-value">${totalAssets}</div><div class="stat-label">${t('admin.totalAssets')}</div><div class="stat-sub">${underReview} ${t('admin.underReview')}</div></div></div>
+        <div class="stat-card"><div class="stat-icon stat-icon-orange">${svgIcon('file-text',20)}</div><div><div class="stat-value">${activeAgs}</div><div class="stat-label">${t('admin.activeAgreements')}</div></div></div>
+        <div class="stat-card"><div class="stat-icon stat-icon-purple">${svgIcon('dollar-sign',20)}</div><div><div class="stat-value">${totalComm.toLocaleString()}</div><div class="stat-label">${t('admin.totalCommissions')}</div><div class="stat-sub">${t('common.riyal')}</div></div></div>
+      </div>
+      <div>
+        <h2 class="font-bold text-gray-900 mb-4">${l==='ar'?'الأصول قيد المراجعة':'Assets Under Review'}</h2>
+        <div id="pending-container">${pendingHtml}</div>
+      </div>
+    </main>
+  </div>
+</div>`;
+
+function approveAsset(id) {
+  const a = DB.assets.find(x=>x.id===id);
+  if(a) { a.status='approved'; refreshPending(); }
+}
+function rejectAsset(id) {
+  const a = DB.assets.find(x=>x.id===id);
+  if(a) { a.status='rejected'; refreshPending(); }
+}
+function refreshPending() {
+  const updated = DB.assets.filter(a=>a.status==='under_review');
+  document.getElementById('pending-container').innerHTML = updated.length===0
+    ? `<p class="text-gray-400 text-sm">${t('common.noData')}</p>`
+    : `<div class="space-y-3">${updated.map(a=>`
+    <div class="card flex justify-between items-start gap-4">
+      <div><div class="font-semibold">${l==='ar'?a.nameAr:a.nameEn}</div><div class="text-sm text-gray-500">${l==='ar'?a.cityAr:a.cityEn} · ${t('asset.types.'+a.type)}</div></div>
+      <div class="flex gap-2">
+        <button class="btn btn-sm" style="background:var(--emerald-600);color:#fff" onclick="approveAsset('${a.id}')">${t('admin.approve')}</button>
+        <button class="btn btn-danger btn-sm" onclick="rejectAsset('${a.id}')">${t('admin.reject')}</button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+function viewAsset(id) {
+  const a = DB.assets.find(x=>x.id===id);
+  if(!a) return;
+  const nm = l==='ar'?a.nameAr:a.nameEn;
+  const desc = l==='ar'?a.descriptionAr:a.descriptionEn;
+  const body = `<div class="space-y-3 text-sm">
+    <div>${assetStatusBadge(a.status)}</div>
+    <div>${svgIcon('map-pin',13)} ${l==='ar'?a.cityAr:a.cityEn} · ${a.size?.toLocaleString()} ${t('common.sqm')}</div>
+    ${desc?`<p class="text-gray-600">${desc}</p>`:''}
+    <div><b>${t('asset.facilitiesLabel')}: </b>${(a.facilities||[]).map(f=>t('asset.facilities.'+f)).join(' · ')}</div>
+  </div>`;
+  showModal(nm, body, `
+    <button class="btn btn-danger btn-sm" onclick="rejectAsset('${id}');closeModal()">${t('admin.reject')}</button>
+    <button class="btn btn-sm" style="background:var(--emerald-600);color:#fff" onclick="approveAsset('${id}');closeModal()">${t('admin.approve')}</button>`);
+}
+}
+</script>
+</body>
+</html>

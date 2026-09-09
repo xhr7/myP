@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>التطابقات | Owner Matches</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['owner'])) {}
+else {
+const u = State.user;
+const l = State.lang;
+const myAssets = DB.assets.filter(a=>a.ownerId===u.id);
+
+const MATCHES = [
+  { assetId:'a1', investorNameAr:'خالد العمري', investorNameEn:'Khalid Al-Omari', projectTypeAr:'صالون خارجي موسمي', projectTypeEn:'Seasonal Outdoor Lounge', matchPercent:92 },
+  { assetId:'a1', investorNameAr:'سعد المطيري', investorNameEn:'Saad Al-Mutairi', projectTypeAr:'مخيم تراثي', projectTypeEn:'Heritage Camping Site', matchPercent:78 },
+].filter(m=>myAssets.some(a=>a.id===m.assetId));
+
+const reasons = l==='ar'?['الموقع مطابق','المساحة المطلوبة متوفرة','النشاط المقترح مسموح به','المرافق المطلوبة متوفرة']:['Location matches','Required size available','Activity allowed','Facilities available'];
+
+const listHtml = MATCHES.length===0
+  ? `<div class="card-dashed">${svgIcon('zap',32)}<p class="text-gray-400 mt-3">${t('common.noData')}</p></div>`
+  : `<div class="space-y-4">${MATCHES.map(m=>{
+    const asset = myAssets.find(a=>a.id===m.assetId);
+    const assetNm = asset ? (l==='ar'?asset.nameAr:asset.nameEn) : '';
+    return `<div class="card">
+      <div class="flex justify-between items-start gap-3 mb-3">
+        <div>
+          <div class="font-semibold text-gray-900">${l==='ar'?m.projectTypeAr:m.projectTypeEn}</div>
+          <div class="text-sm text-gray-500 mt-0.5">${l==='ar'?m.investorNameAr:m.investorNameEn} · ${assetNm}</div>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .85rem;background:var(--emerald-50);color:var(--emerald-700);border-radius:9999px;font-size:.875rem;font-weight:700">${m.matchPercent}% ${t('match.matchPercent')}</div>
+      </div>
+      <ul class="space-y-1.5">${reasons.map(r=>`<li style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--gray-600)"><span style="width:.4rem;height:.4rem;border-radius:50%;background:var(--emerald-400);flex-shrink:0"></span>${r}</li>`).join('')}</ul>
+    </div>`;
+  }).join('')}</div>`;
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('owner','owner-matches.html')}
+    <main class="main-content">
+      <div class="flex items-center gap-3 mb-6">${svgIcon('zap',20)} <h1 class="text-xl font-bold text-gray-900">${t('nav.matches')}</h1></div>
+      ${listHtml}
+    </main>
+  </div>
+</div>`;
+}
+</script>
+</body>
+</html>

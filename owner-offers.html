@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>العروض الواردة | Received Offers</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['owner'])) {}
+else {
+const u = State.user;
+const assetIds = DB.assets.filter(a=>a.ownerId===u.id).map(a=>a.id);
+const offers = DB.offers.filter(o=>assetIds.includes(o.assetId));
+
+function getStatus(id) { return DB.offerStatusOverrides[id] || offers.find(o=>o.id===id)?.status || 'pending'; }
+
+function renderOffers() {
+  const statusColors = {pending:'orange', accepted:'emerald', rejected:'red'};
+  const html = offers.length===0
+    ? `<div class="card-dashed">${svgIcon('inbox',32)}<p class="text-gray-400 mt-3">${t('common.noData')}</p></div>`
+    : `<div class="space-y-4">${offers.map(o=>{
+      const st = getStatus(o.id);
+      const financialDisplay = o.financialType==='share'
+        ? `${o.financialValue}% ${State.lang==='ar'?'من الأرباح':'revenue share'}`
+        : `${o.financialValue?.toLocaleString()} ${t('common.riyal')} ${State.lang==='ar'?'سنوياً':'annually'}`;
+      return `<div class="card">
+        <div class="flex justify-between items-start gap-3 mb-3">
+          <div>
+            <div class="font-semibold text-gray-900">${State.lang==='ar'?o.projectTypeAr:o.projectTypeEn}</div>
+            <div class="flex items-center gap-1 text-sm text-gray-500 mt-0.5">${svgIcon('user',13)} ${State.lang==='ar'?o.investorNameAr:o.investorNameEn}</div>
+          </div>
+          ${badge(t('offer.statuses.'+st), statusColors[st]||'gray')}
+        </div>
+        <div class="grid-2 mb-3">
+          <div style="background:var(--gray-50);border-radius:.5rem;padding:.6rem">
+            <div class="text-xs text-gray-400 mb-0.5">${t('offer.periodTitle')}</div>
+            <div class="font-medium text-sm text-gray-800">${o.period} ${t('common.'+o.periodUnit)}</div>
+          </div>
+          <div style="background:var(--gray-50);border-radius:.5rem;padding:.6rem">
+            <div class="text-xs text-gray-400 mb-0.5">${t('offer.financialTitle')}</div>
+            <div class="font-medium text-sm text-gray-800">${financialDisplay}</div>
+          </div>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+          <button class="btn btn-outline btn-sm" onclick="viewOffer('${o.id}')">${t('offer.viewOffer')}</button>
+          ${st==='pending' ? `
+          <button class="btn btn-primary btn-sm" onclick="acceptOffer('${o.id}')">${t('offer.acceptOffer')}</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectOffer('${o.id}')">${t('offer.rejectOffer')}</button>` : ''}
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+
+  document.getElementById('offers-container').innerHTML = html;
+}
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('owner','owner-offers.html')}
+    <main class="main-content">
+      <div class="flex items-center gap-3 mb-6">
+        ${svgIcon('inbox',20)} <h1 class="text-xl font-bold text-gray-900">${t('nav.receivedOffers')}</h1>
+      </div>
+      <div id="offers-container"></div>
+    </main>
+  </div>
+</div>`;
+
+renderOffers();
+
+function viewOffer(id) {
+  const o = offers.find(x=>x.id===id);
+  if(!o) return;
+  const body = `<div class="space-y-4 text-sm">
+    <div><div class="text-xs text-gray-400 mb-1">${t('offer.investorLabel')}</div><div class="font-medium">${State.lang==='ar'?o.investorNameAr:o.investorNameEn}</div></div>
+    <div><div class="text-xs text-gray-400 mb-1">${t('offer.projectDescLabel')}</div><div class="text-gray-700 leading-relaxed">${State.lang==='ar'?o.projectDescAr:o.projectDescEn}</div></div>
+    <div class="grid-2">
+      <div style="background:var(--gray-50);border-radius:.5rem;padding:.75rem"><div class="text-xs text-gray-400 mb-0.5">${t('offer.periodTitle')}</div><div class="font-medium">${o.period} ${t('common.'+o.periodUnit)}</div></div>
+      <div style="background:var(--gray-50);border-radius:.5rem;padding:.75rem"><div class="text-xs text-gray-400 mb-0.5">${t('offer.financialTitle')}</div><div class="font-medium">${o.financialNote}</div></div>
+    </div>
+    <div><div class="text-xs text-gray-400 mb-1">${t('offer.meetRequirementsLabel')}</div><div class="text-gray-700">${State.lang==='ar'?o.meetRequirementsAr:o.meetRequirementsEn}</div></div>
+  </div>`;
+  const st = getStatus(id);
+  const foot = st==='pending'
+    ? `<button class="btn btn-danger btn-sm" onclick="rejectOffer('${id}');closeModal()">${t('offer.rejectOffer')}</button>
+       <button class="btn btn-primary btn-sm" onclick="acceptOffer('${id}');closeModal()">${t('offer.acceptOffer')}</button>`
+    : `<button class="btn btn-outline btn-sm" onclick="closeModal()">${t('common.close')}</button>`;
+  showModal(State.lang==='ar'?o.projectTypeAr:o.projectTypeEn, body, foot);
+}
+function acceptOffer(id) { DB.offerStatusOverrides[id]='accepted'; renderOffers(); closeModal(); }
+function rejectOffer(id) { DB.offerStatusOverrides[id]='rejected'; renderOffers(); closeModal(); }
+}
+</script>
+</body>
+</html>

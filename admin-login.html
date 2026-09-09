@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>دخول المشرف | Admin Login</title><link rel="stylesheet" href="style.css"></head>
+<body style="background:var(--gray-900)">
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+document.getElementById('root').innerHTML = `
+${buildNavbar()}
+<main style="flex:1;display:flex;align-items:center;justify-content:center;padding:3rem 1rem;background:var(--gray-900)">
+  <div style="width:100%;max-width:22rem">
+    <div class="card shadow-sm" style="padding:2rem">
+      <div class="text-center mb-6">
+        <div style="width:3rem;height:3rem;background:var(--purple-600);border-radius:.75rem;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;color:#fff">${svgIcon('lock',22)}</div>
+        <h1 class="text-xl font-bold text-gray-900">${t('auth.adminTitle')}</h1>
+      </div>
+      <div id="err-box" class="error-box mb-4 hidden"></div>
+      <form id="admin-form" class="space-y-4">
+        <div>
+          <label class="form-label">${t('auth.email')}</label>
+          <input id="f-email" class="form-input" type="email" placeholder="admin@aayed.sa" dir="ltr">
+        </div>
+        <div>
+          <label class="form-label">${t('auth.password')}</label>
+          <input id="f-pw" class="form-input" type="password" dir="ltr">
+        </div>
+        <button type="submit" class="btn btn-purple w-full justify-center">${t('auth.adminBtn')}</button>
+      </form>
+      <p class="text-xs text-gray-400 text-center mt-4">${t('auth.demoHint')}</p>
+    </div>
+  </div>
+</main>`;
+
+document.getElementById('admin-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const email = document.getElementById('f-email').value.trim();
+  doLogin(email, '', true);
+  location.href = 'admin-dashboard.html';
+});
+</script>
+</body>
+</html>

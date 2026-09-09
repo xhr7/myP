@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>العوائد | Returns</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['owner'])) {}
+else {
+const l = State.lang;
+const paid = DB.payments.filter(p=>p.status==='paid');
+const totalReceived = paid.reduce((s,p)=>s+(p.netToOwner||0),0);
+const totalExpected = DB.payments.reduce((s,p)=>s+(p.netToOwner||(p.grossAmount?p.grossAmount*.3*.975:0)),0);
+const totalComm = paid.reduce((s,p)=>s+(p.commissionAmount||0),0);
+const nextPay = DB.payments.find(p=>p.status==='pending');
+const nextAmt = nextPay ? nextPay.grossAmount * .3 * .975 : null;
+
+const statusColors = {paid:'emerald',pending:'orange',upcoming:'gray'};
+
+// Mini bar chart
+const maxVal = Math.max(...paid.map(p=>p.netToOwner||0), 1);
+const barHtml = `<div class="bar-chart">${paid.map(p=>{
+  const pct = Math.round((p.netToOwner/maxVal)*100);
+  const mo = p.period.split('/').pop().trim();
+  return `<div class="bar-col"><div class="bar-val">${(p.netToOwner/1000).toFixed(0)}k</div><div class="bar" style="height:${pct}%"></div><div class="bar-label">${mo}</div></div>`;
+}).join('')}</div>`;
+
+const tableHtml = `<div class="table-wrap"><table>
+  <thead><tr>
+    <th>${t('returns.period')}</th>
+    <th>${t('returns.amount')}</th>
+    <th>${t('returns.commissionDeducted')}</th>
+    <th>${t('returns.status')}</th>
+  </tr></thead>
+  <tbody>${DB.payments.map(p=>`<tr>
+    <td>${p.period}</td>
+    <td class="font-medium">${p.netToOwner?`${p.netToOwner.toLocaleString()} ${t('common.riyal')}`:'—'}</td>
+    <td>${p.commissionAmount?`${p.commissionAmount.toLocaleString()} ${t('common.riyal')}`:'—'}</td>
+    <td>${badge(t('returns.statuses.'+p.status),statusColors[p.status]||'gray')}</td>
+  </tr>`).join('')}
+  </tbody>
+</table></div>`;
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('owner','returns.html')}
+    <main class="main-content">
+      <div class="flex items-center gap-3 mb-6">${svgIcon('trending-up',20)} <h1 class="text-xl font-bold text-gray-900">${t('returns.title')}</h1></div>
+      <div class="grid-4 mb-6">
+        <div class="stat-card"><div class="stat-icon stat-icon-emerald">${svgIcon('trending-up',20)}</div><div><div class="stat-value">${totalReceived.toLocaleString()}</div><div class="stat-label">${t('returns.totalReceived')}</div><div class="stat-sub">${t('common.riyal')}</div></div></div>
+        <div class="stat-card"><div class="stat-icon stat-icon-blue">${svgIcon('dollar-sign',20)}</div><div><div class="stat-value">${Math.round(totalExpected).toLocaleString()}</div><div class="stat-label">${t('returns.totalExpected')}</div><div class="stat-sub">${t('common.riyal')}</div></div></div>
+        <div class="stat-card"><div class="stat-icon stat-icon-orange">${svgIcon('calendar',20)}</div><div><div class="stat-value">${nextAmt?Math.round(nextAmt).toLocaleString():'—'}</div><div class="stat-label">${t('returns.nextPayment')}</div><div class="stat-sub">${nextPay?.dueDate||''}</div></div></div>
+        <div class="stat-card"><div class="stat-icon stat-icon-gray">${svgIcon('dollar-sign',20)}</div><div><div class="stat-value">${totalComm.toLocaleString()}</div><div class="stat-label">${t('returns.commissionDeducted')}</div><div class="stat-sub">${t('common.riyal')}</div></div></div>
+      </div>
+      ${paid.length>0?`<div class="card mb-6"><h3 class="font-semibold text-gray-900 mb-4">${t('returns.chartTitle')}</h3>${barHtml}</div>`:''}
+      ${tableHtml}
+    </main>
+  </div>
+</div>`;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إضافة أصل | Add Asset</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['owner'])) {}
+else {
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('owner','add-asset.html')}
+    <main class="main-content">
+      <div style="max-width:42rem">
+        <h1 class="text-xl font-bold text-gray-900 mb-6">${t('asset.addTitle')}</h1>
+        <div id="success-msg" class="hidden" style="text-align:center;padding:4rem 1rem">
+          <div style="color:var(--emerald-500);margin-bottom:1rem">${svgIcon('check-circle',48)}</div>
+          <h2 class="text-xl font-bold text-gray-900 mb-2">${State.lang==='ar'?'تم تقديم الأصل للمراجعة':'Asset Submitted for Review'}</h2>
+          <p class="text-sm text-gray-500 mb-5">${State.lang==='ar'?'سيراجع الفريق بياناتك ويتواصل معك.':'Our team will review your asset details.'}</p>
+          <a href="owner-assets.html" class="btn btn-primary">${State.lang==='ar'?'العودة لأصولي':'Back to My Assets'}</a>
+        </div>
+        <form id="asset-form" class="card space-y-5">
+          <div>
+            <label class="form-label">${t('asset.nameLabel')} *</label>
+            <input id="f-name" class="form-input" required placeholder="${State.lang==='ar'?'مثال: مزرعة الشمال':'e.g. North Farm'}">
+          </div>
+          <div>
+            <label class="form-label">${t('asset.typeLabel')} *</label>
+            <div class="grid-3 mt-1" id="type-btns">
+              ${['farm','land','property','shop','floor','space'].map(tp=>`<button type="button" class="toggle-btn" data-type="${tp}" onclick="pickType('${tp}')">${t('asset.types.'+tp)}</button>`).join('')}
+            </div>
+            <input type="hidden" id="f-type">
+          </div>
+          <div class="grid-2">
+            <div><label class="form-label">${t('asset.regionLabel')}</label><input id="f-region" class="form-input" placeholder="${State.lang==='ar'?'الرياض':'Riyadh'}"></div>
+            <div><label class="form-label">${t('asset.cityLabel')}</label><input id="f-city" class="form-input" placeholder="${State.lang==='ar'?'الرياض':'Riyadh'}"></div>
+            <div><label class="form-label">${t('asset.districtLabel')}</label><input id="f-district" class="form-input"></div>
+            <div><label class="form-label">${t('asset.sizeLabel')}</label><input id="f-size" type="number" class="form-input" dir="ltr" placeholder="5000"></div>
+          </div>
+          <div>
+            <label class="form-label">${t('asset.conditionLabel')}</label>
+            <div class="flex gap-3 mt-1">
+              ${[['excellent','conditionNew'],['good','conditionGood'],['fair','conditionFair']].map(([v,k])=>`<button type="button" class="toggle-btn flex-1" data-cond="${v}" onclick="pickCond('${v}')">${t('asset.conditions.'+v)}</button>`).join('')}
+            </div>
+            <input type="hidden" id="f-cond" value="good">
+          </div>
+          <div>
+            <label class="form-label">${t('asset.facilitiesLabel')}</label>
+            <div class="flex flex-wrap gap-2 mt-1" id="fac-btns">
+              ${['water','electricity','storage','parking','restrooms','kitchen'].map(f=>`<button type="button" class="chip" data-fac="${f}" onclick="toggleFac('${f}')">${t('asset.facilities.'+f)}</button>`).join('')}
+            </div>
+          </div>
+          <div>
+            <label class="form-label">${t('asset.allowedActivitiesLabel')}</label>
+            <input id="f-activities" class="form-input" placeholder="${State.lang==='ar'?'مثال: صالون خارجي، تخييم':'e.g. outdoor lounge, camping'}">
+          </div>
+          <div>
+            <label class="form-label">${t('asset.expectedReturnLabel')}</label>
+            <div class="flex gap-3 mt-1">
+              ${[['fixed','returnTypes.fixed'],['share','returnTypes.share'],['both','returnTypes.both']].map(([v,k])=>`<button type="button" class="toggle-btn flex-1" data-ret="${v}" onclick="pickRet('${v}')">${t('asset.'+k)}</button>`).join('')}
+            </div>
+            <input type="hidden" id="f-ret" value="share">
+          </div>
+          <div>
+            <label class="form-label">${t('asset.descriptionLabel')}</label>
+            <textarea id="f-desc" class="form-textarea" rows="3"></textarea>
+          </div>
+          <div>
+            <label class="form-label">${t('asset.restrictionsLabel')}</label>
+            <textarea id="f-restrictions" class="form-textarea" rows="2"></textarea>
+          </div>
+          <div class="card-dashed" style="padding:1.5rem">${t('asset.photosHint')}</div>
+          <button type="submit" class="btn btn-primary w-full justify-center">${t('asset.submitAsset')}</button>
+        </form>
+      </div>
+    </main>
+  </div>
+</div>`;
+
+// defaults
+pickCond('good'); pickRet('share');
+
+document.getElementById('asset-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = document.getElementById('f-name').value.trim();
+  const type = document.getElementById('f-type').value;
+  if(!name||!type) { alert(State.lang==='ar'?'يرجى إدخال الاسم واختيار نوع الأصل':'Please enter name and pick asset type'); return; }
+  document.getElementById('asset-form').style.display='none';
+  document.getElementById('success-msg').classList.remove('hidden');
+});
+
+function pickType(v) {
+  document.getElementById('f-type').value = v;
+  document.querySelectorAll('[data-type]').forEach(b=>b.classList.toggle('active', b.dataset.type===v));
+}
+function pickCond(v) {
+  document.getElementById('f-cond').value = v;
+  document.querySelectorAll('[data-cond]').forEach(b=>b.classList.toggle('active', b.dataset.cond===v));
+}
+function pickRet(v) {
+  document.getElementById('f-ret').value = v;
+  document.querySelectorAll('[data-ret]').forEach(b=>b.classList.toggle('active', b.dataset.ret===v));
+}
+const selFacs = new Set();
+function toggleFac(v) {
+  const btn = document.querySelector(`[data-fac="${v}"]`);
+  if(selFacs.has(v)){ selFacs.delete(v); btn.classList.remove('active'); }
+  else { selFacs.add(v); btn.classList.add('active'); }
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>فرصة السوق | Market Opportunity</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+const statsHtml = DB.marketStats.map(s => `
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-emerald">${svgIcon('building',20)}</div>
+    <div>
+      <div class="stat-value">${s.value}</div>
+      <div class="stat-label">${State.lang==='ar'?s.labelAr:s.labelEn}</div>
+      <div class="stat-sub">${t('market.source')}: ${State.lang==='ar'?s.sourceAr:s.sourceEn}</div>
+    </div>
+  </div>`).join('');
+
+document.getElementById('root').innerHTML = `
+${buildNavbar({ publicLinks: true })}
+<main style="flex:1;padding:3rem 1.25rem">
+  <div class="container">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-extrabold text-gray-900 mb-2">${t('market.title')}</h1>
+      <p class="text-gray-500 text-sm">${t('market.subtitle')}</p>
+    </div>
+    <div class="alert alert-amber mb-8">
+      ${svgIcon('alert-circle',18)}
+      <p class="text-sm leading-relaxed">${t('market.disclaimer')}</p>
+    </div>
+    <div class="grid-4 mb-8">${statsHtml}</div>
+    <div class="alert alert-emerald mb-4">
+      <p class="text-sm leading-relaxed">${t('market.targetNote')}</p>
+    </div>
+    <div class="alert alert-blue">
+      <p class="text-sm leading-relaxed">${t('market.q5q7Note')}</p>
+    </div>
+  </div>
+</main>
+${buildFooter()}`;
+</script>
+</body>
+</html>

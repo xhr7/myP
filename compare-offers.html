@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>مقارنة العروض | Compare Offers</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['owner'])) {}
+else {
+const u = State.user;
+const assetIds = DB.assets.filter(a=>a.ownerId===u.id).map(a=>a.id);
+const offers = DB.offers.filter(o=>assetIds.includes(o.assetId));
+const l = State.lang;
+
+const rows = [
+  {labelAr:'المشغّل', labelEn:'Operator', fn: o=>l==='ar'?o.investorNameAr:o.investorNameEn},
+  {labelAr:'نوع المشروع', labelEn:'Project Type', fn: o=>l==='ar'?o.projectTypeAr:o.projectTypeEn},
+  {labelAr:'المدة', labelEn:'Period', fn: o=>`${o.period} ${t('common.'+o.periodUnit)}`},
+  {labelAr:'العرض المالي', labelEn:'Financial Offer', fn: o=>o.financialNote},
+  {labelAr:'الحالة', labelEn:'Status', fn: o=>{const st=DB.offerStatusOverrides[o.id]||o.status; return badge(t('offer.statuses.'+st),{pending:'orange',accepted:'emerald',rejected:'red'}[st]||'gray');}},
+];
+
+const tableHtml = offers.length===0
+  ? `<div class="card-dashed"><p class="text-gray-400">${t('common.noData')}</p></div>`
+  : `<div class="table-wrap"><table>
+    <thead><tr>
+      <th style="width:10rem">${l==='ar'?'البيان':'Item'}</th>
+      ${offers.map(o=>`<th style="text-align:center">${l==='ar'?o.investorNameAr:o.investorNameEn}</th>`).join('')}
+    </tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td style="color:var(--gray-500)">${l==='ar'?r.labelAr:r.labelEn}</td>
+      ${offers.map(o=>`<td style="text-align:center;font-weight:500">${r.fn(o)}</td>`).join('')}
+    </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('owner','compare-offers.html')}
+    <main class="main-content">
+      <h1 class="text-xl font-bold text-gray-900 mb-6">${t('offer.compareTitle')}</h1>
+      ${tableHtml}
+      <p class="text-xs text-gray-400 text-center mt-4">${l==='ar'?'راجع العروض من صفحة العروض الواردة للقبول أو الرفض.':'Accept or reject offers from the Received Offers page.'}</p>
+    </main>
+  </div>
+</div>`;
+}
+</script>
+</body>
+</html>

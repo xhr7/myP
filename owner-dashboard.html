@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>لوحة تحكم صاحب الأصل | Owner Dashboard</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['owner'])) {}
+else {
+const u = State.user;
+const nm = State.lang==='ar'?u.nameAr:u.nameEn;
+const myAssets = DB.assets.filter(a=>a.ownerId===u.id);
+const myAgreements = DB.agreements.filter(a=>a.ownerId===u.id);
+const paid = DB.payments.filter(p=>p.status==='paid');
+const totalReceived = paid.reduce((s,p)=>s+(p.netToOwner||0),0);
+const notifs = (DB.notifications[u.id]||[]).filter(n=>!n.read);
+
+const assetsHtml = myAssets.length===0
+  ? `<div class="card-dashed"><div style="color:var(--gray-300);margin-bottom:.75rem">${svgIcon('building',32)}</div><p class="text-gray-400">${t('common.noData')}</p><a href="add-asset.html" class="text-sm" style="color:var(--emerald-600)">${t('asset.addTitle')}</a></div>`
+  : `<div class="grid-3">${myAssets.map(a=>`
+    <div class="card card-hover">
+      <div style="height:7rem;background:linear-gradient(135deg,var(--emerald-50),#f0fdf4);border-radius:.5rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;color:var(--emerald-300)">${svgIcon('building',36)}</div>
+      <div class="flex justify-between items-start gap-2 mb-2">
+        <span class="font-semibold text-gray-900 text-sm">${State.lang==='ar'?a.nameAr:a.nameEn}</span>
+        ${assetStatusBadge(a.status)}
+      </div>
+      <div class="flex items-center gap-1 text-sm text-gray-500 mb-1">${svgIcon('map-pin',12)} ${State.lang==='ar'?a.cityAr:a.cityEn}</div>
+      <div class="flex items-center gap-2 text-sm text-gray-500">
+        <span class="flex items-center gap-1">${svgIcon('maximize',12)} ${a.size?.toLocaleString()} ${t('common.sqm')}</span>
+        <span style="background:var(--gray-100);padding:.1rem .5rem;border-radius:9999px;font-size:.72rem">${t('asset.types.'+a.type)}</span>
+      </div>
+      <a href="owner-assets.html" class="btn btn-outline btn-sm w-full justify-center mt-3">${t('common.view')}</a>
+    </div>`).join('')}</div>`;
+
+const notifsHtml = notifs.length===0 ? '' : `
+  <div>
+    <h2 class="font-bold text-gray-900 mb-3">${State.lang==='ar'?'الإشعارات الجديدة':'New Notifications'}</h2>
+    <div class="space-y-2">${notifs.map(n=>`
+      <div class="card flex items-start gap-3">
+        <span style="width:.5rem;height:.5rem;background:var(--emerald-500);border-radius:50%;margin-top:.4rem;flex-shrink:0"></span>
+        <div>
+          <div class="text-sm font-semibold text-gray-900">${State.lang==='ar'?n.titleAr:n.titleEn}</div>
+          <div class="text-xs text-gray-500 mt-0.5">${State.lang==='ar'?n.descAr:n.descEn}</div>
+        </div>
+      </div>`).join('')}</div>
+  </div>`;
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('owner','owner-dashboard.html')}
+    <main class="main-content">
+      <div class="space-y-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">${State.lang==='ar'?`مرحباً، ${nm}`:`Welcome, ${nm}`}</h1>
+            <p class="text-sm text-gray-500 mt-1">${State.lang==='ar'?'لوحة تحكم صاحب الأصل':'Asset Owner Dashboard'}</p>
+          </div>
+          <a href="add-asset.html" class="btn btn-primary btn-sm">${svgIcon('plus-circle',15)} ${t('nav.addAsset')}</a>
+        </div>
+        <div class="grid-4">
+          <div class="stat-card"><div class="stat-icon stat-icon-emerald">${svgIcon('building',20)}</div><div><div class="stat-value">${myAssets.length}</div><div class="stat-label">${t('nav.myAssets')}</div></div></div>
+          <div class="stat-card"><div class="stat-icon stat-icon-blue">${svgIcon('file-text',20)}</div><div><div class="stat-value">${myAgreements.length}</div><div class="stat-label">${t('nav.agreements')}</div></div></div>
+          <div class="stat-card"><div class="stat-icon stat-icon-purple">${svgIcon('trending-up',20)}</div><div><div class="stat-value">${totalReceived.toLocaleString()}</div><div class="stat-label">${t('returns.totalReceived')}</div><div class="stat-sub">${t('common.riyal')}</div></div></div>
+          <div class="stat-card"><div class="stat-icon ${notifs.length>0?'stat-icon-orange':'stat-icon-gray'}">${svgIcon('bell',20)}</div><div><div class="stat-value">${notifs.length}</div><div class="stat-label">${State.lang==='ar'?'إشعارات جديدة':'New Notifications'}</div></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="font-bold text-gray-900">${t('nav.myAssets')}</h2>
+            <a href="owner-assets.html" class="text-sm" style="color:var(--emerald-600)">${State.lang==='ar'?'عرض الكل':'View all'}</a>
+          </div>
+          ${assetsHtml}
+        </div>
+        ${notifsHtml}
+      </div>
+    </main>
+  </div>
+</div>`;
+}
+</script>
+</body>
+</html>

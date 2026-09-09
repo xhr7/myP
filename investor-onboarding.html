@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>تأهيل المشغّل | Operator Onboarding</title><link rel="stylesheet" href="style.css"></head>
+<body style="background:var(--gray-50)">
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['general','owner','investor'])) {}
+else {
+const STEPS = t('onboarding.investorSteps');
+let currentStep = 0;
+let confirmed = false;
+let projectType = '';
+let expYears = '';
+let budget = '';
+
+const PROJECT_TYPES_AR = ['مطعم / مقهى','صالون خارجي موسمي','مخيم تراثي','مزرعة إنتاجية','متجر تجزئة','خدمات متخصصة'];
+const PROJECT_TYPES_EN = ['Restaurant / Café','Seasonal Outdoor Lounge','Heritage Camping Site','Productive Farm','Retail Store','Specialized Services'];
+
+function renderStep() {
+  const stepsHtml = STEPS.map((s,i)=>`
+    <div style="display:flex;align-items:center;flex:1">
+      <div class="wizard-step-dot ${i<currentStep?'done':i===currentStep?'current':'future'}">${i<currentStep?'✓':i+1}</div>
+      ${i<STEPS.length-1?`<div class="wizard-line ${i<currentStep?'done':''}"></div>`:''}
+    </div>`).join('');
+
+  let body = '';
+  if(currentStep===0){
+    body=`<p class="text-sm text-gray-600 leading-relaxed mb-4">${STEPS[0].d}</p>
+    <label class="flex items-start gap-3 cursor-pointer">
+      <input type="checkbox" id="cb-inv" ${confirmed?'checked':''} style="margin-top:.2rem;width:1rem;height:1rem;accent-color:var(--blue-600)">
+      <span class="text-sm text-gray-700">${t('onboarding.investorConfirm')}</span>
+    </label>`;
+  } else if(currentStep===1){
+    const types = State.lang==='ar'?PROJECT_TYPES_AR:PROJECT_TYPES_EN;
+    body=`<p class="text-sm text-gray-500 mb-4">${STEPS[1].d}</p>
+    <div class="grid-2">${types.map((tp,idx)=>`<button class="toggle-btn" data-idx="${idx}" style="${projectType===tp?'border-color:var(--blue-500);background:var(--blue-50);color:var(--blue-700)':''}" onclick="pickTypeIdx(${idx})">${tp}</button>`).join('')}</div>`;
+  } else if(currentStep===2){
+    body=`<div class="space-y-4">
+      <div>
+        <label class="form-label">${State.lang==='ar'?'سنوات الخبرة التشغيلية':'Years of Operational Experience'}</label>
+        <input id="f-exp" type="number" class="form-input" dir="ltr" min="0" value="${expYears}" placeholder="3" oninput="expYears=this.value">
+      </div>
+      <div>
+        <label class="form-label">${State.lang==='ar'?'ميزانية الاستثمار (ريال)':'Investment Budget (SAR)'}</label>
+        <input id="f-budget" type="number" class="form-input" dir="ltr" value="${budget}" placeholder="500000" oninput="budget=this.value">
+      </div>
+    </div>`;
+  } else if(currentStep===3){
+    body=`<div class="alert alert-blue mb-4">${svgIcon('shield',20)}
+      <div><p class="font-semibold mb-1">${t('onboarding.ownershipNote')}</p><p class="text-sm">${t('onboarding.commissionNote')}</p></div>
+    </div>
+    <div class="card" style="background:var(--gray-50);font-size:.875rem;color:var(--gray-600)">${State.lang==='ar'?'عمولة المنصة: 2.5٪ من قيمة كل اتفاقية.':'Platform commission: 2.5% of each agreement value.'}</div>`;
+  } else {
+    body=`<div class="flex items-center gap-2 mb-4" style="color:var(--blue-700)">${svgIcon('check-circle',22)}<span class="font-semibold">${State.lang==='ar'?'معلوماتك جاهزة للتأكيد':'Your information is ready to confirm'}</span></div>
+    <div class="space-y-3 text-sm">
+      <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid var(--gray-100)"><span class="text-gray-500">${State.lang==='ar'?'نوع المشروع':'Project Type'}</span><span class="font-medium">${projectType||'—'}</span></div>
+      <div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid var(--gray-100)"><span class="text-gray-500">${State.lang==='ar'?'سنوات الخبرة':'Experience Years'}</span><span class="font-medium">${expYears||'—'}</span></div>
+      ${budget?`<div class="flex justify-between" style="padding:.5rem 0;border-bottom:1px solid var(--gray-100)"><span class="text-gray-500">${State.lang==='ar'?'الميزانية':'Budget'}</span><span class="font-medium">${Number(budget).toLocaleString()} ${t('common.riyal')}</span></div>`:''}
+      <div class="flex justify-between" style="padding:.5rem 0"><span class="text-gray-500">${State.lang==='ar'?'عمولة المنصة':'Platform Commission'}</span><span class="font-medium" style="color:var(--blue-700)">2.5%</span></div>
+    </div>`;
+  }
+
+  const isFirst = currentStep===0;
+  const isLast  = currentStep===STEPS.length-1;
+  // Step 0 and 1 can safely disable Next in the template (state is known before render).
+  // Step 2 must NOT use disabled — validate inside nextStep() instead to avoid
+  // the timing issue where liveExp reads the old DOM before innerHTML is updated.
+  const nextDis = !isLast && ((currentStep===0&&!confirmed)||(currentStep===1&&!projectType));
+
+  document.getElementById('root').innerHTML = `
+  ${buildNavbar()}
+  <main style="flex:1;padding:2.5rem 1rem">
+    <div class="container-sm">
+      <div class="mb-8">
+        <div class="wizard-steps">${stepsHtml}</div>
+        <div style="font-size:.75rem;color:var(--gray-400);margin-bottom:.25rem">${State.lang==='ar'?`الخطوة ${currentStep+1} من ${STEPS.length}`:`Step ${currentStep+1} of ${STEPS.length}`}</div>
+        <h2 class="text-xl font-bold text-gray-900">${STEPS[currentStep].t}</h2>
+        <p class="text-sm text-gray-500 mt-1">${STEPS[currentStep].d}</p>
+      </div>
+      <div class="card mb-6">${body}</div>
+      <div id="step-err" style="display:none;margin-bottom:.75rem;padding:.6rem 1rem;background:var(--red-50);border:1px solid var(--red-200);border-radius:.5rem;font-size:.875rem;color:var(--red-600)"></div>
+      <div class="flex justify-between">
+        <button class="btn btn-outline" onclick="prevStep()" ${isFirst?'disabled':''}>← ${State.lang==='ar'?'السابق':'Back'}</button>
+        ${isLast
+          ? `<button class="btn btn-blue" onclick="finish()">${State.lang==='ar'?'تأكيد والمتابعة':'Confirm & Continue'}</button>`
+          : `<button class="btn btn-blue" onclick="nextStep()" ${nextDis?'disabled':''}>${State.lang==='ar'?'التالي':'Next'} →</button>`
+        }
+      </div>
+    </div>
+  </main>`;
+
+  const cbInv = document.getElementById('cb-inv');
+  if(cbInv) cbInv.addEventListener('change', e=>{ confirmed=e.target.checked; renderStep(); });
+}
+
+function nextStep(){
+  // Always capture current input values before re-rendering
+  const el=document.getElementById('f-exp'); if(el) expYears=el.value.trim();
+  const eb=document.getElementById('f-budget'); if(eb) budget=eb.value.trim();
+
+  // Validate step 2 here (not via disabled attribute — avoids DOM timing issues)
+  if(currentStep===2 && !expYears){
+    const errEl=document.getElementById('step-err');
+    if(errEl){
+      errEl.textContent = State.lang==='ar'?'يرجى إدخال سنوات الخبرة':'Please enter years of experience';
+      errEl.style.display='block';
+    }
+    document.getElementById('f-exp')?.focus();
+    return;
+  }
+
+  if(currentStep<STEPS.length-1){ currentStep++; renderStep(); }
+}
+function prevStep(){ if(currentStep>0){ currentStep--; renderStep(); } }
+function pickTypeIdx(idx){
+  const types = State.lang==='ar'?PROJECT_TYPES_AR:PROJECT_TYPES_EN;
+  projectType = types[idx];
+  renderStep();
+}
+function finish(){ upgradeRole('investor'); location.href='investor-dashboard.html'; }
+
+renderStep();
+}
+</script>
+</body>
+</html>

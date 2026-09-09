@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>التقارير | Reports</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['admin'])) {}
+else {
+const l = State.lang;
+const paid = DB.payments.filter(p=>p.status==='paid');
+const totalComm = paid.reduce((s,p)=>s+(p.commissionAmount||0),0);
+const totalGross = paid.reduce((s,p)=>s+(p.grossAmount||0),0);
+const totalNet = paid.reduce((s,p)=>s+(p.netToOwner||0),0);
+
+// Bar chart data
+const maxVal = Math.max(...paid.map(p=>p.commissionAmount||0), 1);
+const barHtml = `<div class="bar-chart">${paid.map(p=>{
+  const pct = Math.round((p.commissionAmount/maxVal)*100);
+  const mo = p.period.split('/').pop().trim();
+  return `<div class="bar-col"><div class="bar-val">${(p.commissionAmount/1000).toFixed(1)}k</div><div class="bar" style="height:${pct}%;background:var(--purple-600)"></div><div class="bar-label">${mo}</div></div>`;
+}).join('')}</div>`;
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('admin','admin-reports.html')}
+    <main class="main-content">
+      <div class="flex items-center gap-3 mb-6">${svgIcon('bar-chart-2',20)} <h1 class="text-xl font-bold text-gray-900">${t('nav.reports')}</h1></div>
+      <div class="grid-3 mb-6">
+        <div class="stat-card"><div class="stat-icon stat-icon-emerald">${svgIcon('trending-up',20)}</div><div><div class="stat-value">${totalGross.toLocaleString()}</div><div class="stat-label">${l==='ar'?'إجمالي الإيرادات':'Total Revenue'}</div><div class="stat-sub">${t('common.riyal')}</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--purple-50);color:var(--purple-600)">${svgIcon('dollar-sign',20)}</div><div><div class="stat-value">${totalComm.toLocaleString()}</div><div class="stat-label">${t('admin.totalCommissions')}</div><div class="stat-sub">${t('common.riyal')}</div></div></div>
+        <div class="stat-card"><div class="stat-icon stat-icon-blue">${svgIcon('users',20)}</div><div><div class="stat-value">${totalNet.toLocaleString()}</div><div class="stat-label">${l==='ar'?'مدفوع لأصحاب الأصول':'Paid to Owners'}</div><div class="stat-sub">${t('common.riyal')}</div></div></div>
+      </div>
+      <div class="card mb-6"><h3 class="font-semibold text-gray-900 mb-4">${l==='ar'?'العمولات الشهرية':'Monthly Commissions'}</h3>${barHtml}</div>
+      <div class="alert alert-amber">
+        <p class="text-sm">${l==='ar'?'تحذير أكاديمي: هذه تقارير نموذجية للعرض التجريبي فقط.':'Academic note: These are prototype reports for demonstration only.'}</p>
+      </div>
+    </main>
+  </div>
+</div>`;
+}
+</script>
+</body>
+</html>

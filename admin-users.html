@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>المستخدمون | Users</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if(!requireAuth(['admin'])) {}
+else {
+const l = State.lang;
+const MOCK_USERS = [
+  {id:'u1', nameAr:'أبو فهد', nameEn:'Abu Fahad', role:'owner', email:'abufahad@demo.com', status:'active', registered:'2024-01-10'},
+  {id:'u2', nameAr:'خالد العمري', nameEn:'Khalid Al-Omari', role:'investor', email:'khalid@demo.com', status:'active', registered:'2024-03-05'},
+  {id:'u3', nameAr:'مشرف عائد', nameEn:'AAYED Admin', role:'admin', email:'admin@aayed.sa', status:'active', registered:'2024-01-01'},
+];
+
+const roleLabels = { owner: l==='ar'?'صاحب أصل':'Asset Owner', investor: l==='ar'?'مشغّل':'Operator', admin: l==='ar'?'مشرف':'Admin', general: l==='ar'?'عام':'General' };
+const roleColors = { owner:'emerald', investor:'blue', admin:'purple', general:'gray' };
+
+const tableHtml = `<div class="table-wrap"><table>
+  <thead><tr>
+    <th>${t('admin.name')}</th>
+    <th>${t('admin.role')}</th>
+    <th>Email</th>
+    <th>${t('admin.registered')}</th>
+    <th>${t('admin.status')}</th>
+  </tr></thead>
+  <tbody>${MOCK_USERS.map(u=>`<tr>
+    <td class="font-medium">${l==='ar'?u.nameAr:u.nameEn}</td>
+    <td>${badge(roleLabels[u.role]||u.role, roleColors[u.role]||'gray')}</td>
+    <td style="direction:ltr;text-align:start">${u.email}</td>
+    <td>${u.registered}</td>
+    <td>${badge(l==='ar'?'نشط':'Active','emerald')}</td>
+  </tr>`).join('')}</tbody>
+</table></div>`;
+
+document.getElementById('root').innerHTML = `
+<div class="dash-wrap">
+  ${buildNavbar()}
+  <div class="dash-body">
+    ${buildSidebar('admin','admin-users.html')}
+    <main class="main-content">
+      <div class="flex items-center gap-3 mb-6">${svgIcon('users',20)} <h1 class="text-xl font-bold text-gray-900">${t('nav.users')}</h1></div>
+      ${tableHtml}
+    </main>
+  </div>
+</div>`;
+}
+</script>
+</body>
+</html>
